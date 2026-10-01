@@ -37,7 +37,7 @@ namespace HerciniamihomoInstaller
 
         public SetupWindow()
         {
-            this.Title = "Herciniamihomo Pro v1.0.0 - 安装向导";
+            this.Title = "Herciniamihomo Pro v1.0.1 - 安装向导";
             this.Width = 540;
             this.Height = 380;
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -134,7 +134,7 @@ namespace HerciniamihomoInstaller
             StackPanel bannerTexts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             bannerTexts.Children.Add(new TextBlock
             {
-                Text = "Herciniamihomo Pro v1.0.0",
+                Text = "Herciniamihomo Pro v1.0.1",
                 Foreground = Brushes.White,
                 FontSize = 17,
                 FontWeight = FontWeights.Bold
@@ -401,7 +401,7 @@ namespace HerciniamihomoInstaller
                             if (key != null)
                             {
                                 key.SetValue("DisplayName", "Herciniamihomo Pro");
-                                key.SetValue("DisplayVersion", "1.0.0");
+                                key.SetValue("DisplayVersion", "1.0.1");
                                 key.SetValue("DisplayIcon", exePath);
                                 key.SetValue("InstallLocation", targetDir);
                                 key.SetValue("Publisher", "Hercinia");
