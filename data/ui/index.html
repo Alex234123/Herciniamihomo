@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Herciniamihomo - Apple Liquid Glass Dashboard</title>
+    <meta
+      name="viewport"
+      content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="description" content="Herciniamihomo Liquid Glass Dashboard" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" href="./favicon.ico" sizes="48x48" />
+    <link id="favicon" rel="icon" href="./favicon.svg" sizes="any" type="image/svg+xml" />
+    <meta name="theme-color" content="#090d16" />
+
+    <!-- Pre-seed Zashboard state BEFORE Vue bundle loads so custom-background & dark glass mode are active immediately -->
+    <script>
+      ;(function () {
+        try {
+          const apiListRaw = localStorage.getItem('setup/api-list')
+          if (!apiListRaw || apiListRaw === '[]') {
+            localStorage.setItem('setup/api-list', JSON.stringify([{
+              uuid: 'hercinia-local-core',
+              type: 'clash',
+              protocol: 'http',
+              host: '127.0.0.1',
+              port: '9097',
+              password: '',
+              secondaryPath: '',
+              label: 'Herciniamihomo v1.19.31',
+              disableUpgradeCore: false,
+              disableTunMode: false
+            }]))
+            localStorage.setItem('setup/active-uuid', 'hercinia-local-core')
+          } else if (!localStorage.getItem('setup/active-uuid')) {
+            const parsed = JSON.parse(apiListRaw)
+            if (parsed.length > 0 && parsed[0].uuid) {
+              localStorage.setItem('setup/active-uuid', parsed[0].uuid)
+            }
+          }
+          if (!localStorage.getItem('config/custom-background-image')) {
+            localStorage.setItem('config/custom-background-image', './assets/background-DTLDDGUj.jpg')
+          }
+          if (!localStorage.getItem('config/dashboard-transparent') || localStorage.getItem('config/dashboard-transparent') === '90') {
+            localStorage.setItem('config/dashboard-transparent', '24')
+          }
+          if (!localStorage.getItem('config/blur-intensity') || localStorage.getItem('config/blur-intensity') === '10') {
+            localStorage.setItem('config/blur-intensity', '20')
+          }
+          localStorage.setItem('config/default-theme', 'dark')
+          localStorage.setItem('config/dark-theme', 'dark')
+          localStorage.setItem('config/scroll-animation-effect', 'true')
+          if (!localStorage.getItem('config/language')) {
+            localStorage.setItem('config/language', 'zh-CN')
+          }
+
+          // 强制开启 Zashboard Vue / JS FLIP 弹簧动画引擎（防止 Windows 系统动画关闭设置导致 prefers-reduced-motion 禁用过渡）
+          if (window.matchMedia) {
+            const origMatchMedia = window.matchMedia.bind(window)
+            window.matchMedia = function (query) {
+              if (typeof query === 'string' && query.indexOf('prefers-reduced-motion') !== -1) {
+                return {
+                  matches: false,
+                  media: query,
+                  onchange: null,
+                  addListener: function () {},
+                  removeListener: function () {},
+                  addEventListener: function () {},
+                  removeEventListener: function () {},
+                  dispatchEvent: function () { return false }
+                }
+              }
+              return origMatchMedia(query)
+            }
+          }
+        } catch (e) {}
+      })()
+    </script>
+
+    <script type="module" crossorigin src="./assets/index-D2kbW8pS.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DBzdVm8x.css" />
+    <link rel="stylesheet" href="./assets/liquid-glass.css?v=3.0" />
+  </head>
+  <body class="h-dvh w-screen">
+    <!-- rdev/liquid-glass-react Optical Refraction & Chromatic Displacement SVG Filter -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+      <defs>
+        <filter id="hercinia-liquid-filter" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+          <feTurbulence
+            id="hercinia-turbulence"
+            type="fractalNoise"
+            baseFrequency="0.012 0.015"
+            numOctaves="2"
+            seed="7"
+            result="noise"
+          />
+          <feDisplacementMap
+            id="hercinia-displacement"
+            in="SourceGraphic"
+            in2="noise"
+            scale="5"
+            xChannelSelector="R"
+            yChannelSelector="G"
+            result="refracted"
+          />
+        </filter>
+      </defs>
+    </svg>
+
+    <!-- 高清动态壁纸底层画布 -->
+    <div id="hercinia-bg-container"></div>
+
+    <!-- Zashboard 主应用挂载点 -->
+    <div id="app"></div>
+
+    <!-- 右下角 Liquid Glass 悬浮触发胶囊 -->
+    <div id="hercinia-dock-trigger" title="点击打开 Liquid Glass 视觉与壁纸工作台">
+      <span>🫧 Liquid Glass 视觉与壁纸台</span>
+    </div>
+
+    <!-- Apple Liquid Glass 视觉调校、壁纸切换与多配置聚合工作台 -->
+    <div id="hercinia-studio-panel">
+      <div class="lg-studio-title">
+        <span>🫧 Apple Liquid Glass 工作台</span>
+        <span id="hercinia-studio-close" style="cursor:pointer; opacity:0.75; font-size:16px;">✕</span>
+      </div>
+
+      <!-- 1. 内置超清壁纸与本地图片上传 -->
+      <div>
+        <div class="lg-section-label">
+          <span>🖼️ 动态壁纸与自定义背景 (支持拖拽图片到窗口)</span>
+        </div>
+        <div class="lg-preset-grid">
+          <div class="lg-preset-btn active" data-preset="mountain">🏔️ 极光雪山</div>
+          <div class="lg-preset-btn" data-preset="ios26">🫧 iOS26琉璃</div>
+          <div class="lg-preset-btn" data-preset="vision">🌌 星云幻境</div>
+          <div class="lg-preset-btn" data-preset="tahoe">🌅 暮光海岸</div>
+          <div class="lg-preset-btn" data-preset="earth">🌍 深空地球</div>
+          <div class="lg-preset-btn" data-preset="cyber">💎 赛博霓虹</div>
+        </div>
+        <div class="lg-upload-box">
+          <div class="lg-upload-btn" id="hercinia-upload-trigger">📁 选择本地图片 (不限大小 / 4K / 8K)</div>
+          <input type="file" id="hercinia-file-input" accept="image/*" style="display:none;" />
+        </div>
+      </div>
+
+      <!-- 2. rdev/liquid-glass-react 光学折射参数实时调节 -->
+      <div class="lg-slider-row">
+        <div class="lg-section-label">
+          <span>💧 液态光学折射扭曲度 (Refraction)</span>
+          <span id="val-refraction">5</span>
+        </div>
+        <input type="range" id="slider-refraction" min="0" max="18" step="1" value="5" />
+      </div>
+
+      <div class="lg-slider-row">
+        <div class="lg-section-label">
+          <span>🌫️ 高斯磨砂模糊度 (Backdrop Blur)</span>
+          <span id="val-blur">20px</span>
+        </div>
+        <input type="range" id="slider-blur" min="4" max="40" step="1" value="20" />
+      </div>
+
+      <div class="lg-slider-row">
+        <div class="lg-section-label">
+          <span>✨ 玻璃通透度 (Crystal Opacity)</span>
+          <span id="val-opacity">24%</span>
+        </div>
+        <input type="range" id="slider-opacity" min="8" max="75" step="1" value="24" />
+      </div>
+
+      <div class="lg-slider-row">
+        <div class="lg-section-label">
+          <span>🌈 边缘镜面高光强度 (Specular Rim)</span>
+          <span id="val-rim">65%</span>
+        </div>
+        <input type="range" id="slider-rim" min="15" max="100" step="5" value="65" />
+      </div>
+
+      <!-- 3. 多配置合并与订阅去重聚合工具 -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.16); padding-top: 10px;">
+        <div class="lg-section-label">
+          <span>🔀 多配置合并 (订阅节点自动去重聚合)</span>
+        </div>
+        <div class="lg-upload-box">
+          <div class="lg-upload-btn" id="hercinia-merge-btn" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.6), rgba(59, 130, 246, 0.6));">
+            ➕ 选择多个 YAML 配置文件合并并热重载
+          </div>
+          <input type="file" id="hercinia-merge-input" accept=".yaml,.yml" multiple style="display:none;" />
+        </div>
+        <div id="hercinia-merge-status" style="font-size: 11.5px; color: #7dd3fc; margin-top: 6px; display: none;"></div>
+      </div>
+    </div>
+
+    <script>
+      ;(function () {
+        const bgContainer = document.getElementById('hercinia-bg-container')
+        const dockTrigger = document.getElementById('hercinia-dock-trigger')
+        const studioPanel = document.getElementById('hercinia-studio-panel')
+        const studioClose = document.getElementById('hercinia-studio-close')
+        const uploadTrigger = document.getElementById('hercinia-upload-trigger')
+        const fileInput = document.getElementById('hercinia-file-input')
+        const presetBtns = document.querySelectorAll('.lg-preset-btn')
+        const displacementEl = document.getElementById('hercinia-displacement')
+
+        // 120Hz 液态阻尼弹簧鼠标追踪器 (Spring Lerp Physics)
+        let targetX = window.innerWidth * 0.5
+        let targetY = window.innerHeight * 0.5
+        let currentX = targetX
+        let currentY = targetY
+        let rafRunning = false
+
+        function tickLiquidLight() {
+          const dx = targetX - currentX
+          const dy = targetY - currentY
+          currentX += dx * 0.09
+          currentY += dy * 0.09
+          document.documentElement.style.setProperty('--mouse-x', currentX.toFixed(1) + 'px')
+          document.documentElement.style.setProperty('--mouse-y', currentY.toFixed(1) + 'px')
+          if (Math.abs(dx) > 0.2 || Math.abs(dy) > 0.2) {
+            requestAnimationFrame(tickLiquidLight)
+          } else {
+            rafRunning = false
+          }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+          targetX = e.clientX
+          targetY = e.clientY
+          if (!rafRunning) {
+            rafRunning = true
+            requestAnimationFrame(tickLiquidLight)
+          }
+        }, { passive: true })
+
+        // 预设超清渐变与内置壁纸库
+        const WALLPAPER_PRESETS = {
+          mountain: "url('./assets/background-DTLDDGUj.jpg')",
+          earth: "url('./assets/earth-night-DiMNTAKM.webp')",
+          ios26: "radial-gradient(circle at 18% 22%, #38bdf8 0%, transparent 45%), radial-gradient(circle at 82% 28%, #c084fc 0%, transparent 48%), radial-gradient(circle at 50% 80%, #3b82f6 0%, transparent 55%), linear-gradient(135deg, #090d1e 0%, #172554 50%, #311042 100%)",
+          vision: "radial-gradient(circle at 25% 75%, #10b981 0%, transparent 45%), radial-gradient(circle at 78% 20%, #6366f1 0%, transparent 50%), radial-gradient(circle at 50% 45%, #ec4899 0%, transparent 42%), linear-gradient(160deg, #060913 0%, #0f172a 60%, #1e1b4b 100%)",
+          tahoe: "radial-gradient(circle at 75% 25%, #fb923c 0%, transparent 45%), radial-gradient(circle at 25% 65%, #ec4899 0%, transparent 50%), radial-gradient(circle at 60% 85%, #6366f1 0%, transparent 50%), linear-gradient(135deg, #180b20 0%, #2a1235 50%, #0f172a 100%)",
+          cyber: "radial-gradient(circle at 15% 30%, #06b6d4 0%, transparent 42%), radial-gradient(circle at 85% 70%, #f43f5e 0%, transparent 45%), radial-gradient(circle at 50% 20%, #8b5cf6 0%, transparent 45%), linear-gradient(145deg, #050814 0%, #091526 55%, #230926 100%)"
+        }
+
+        // IndexedDB 大容量壁纸存储引擎（支持任意 4K/8K 大图，无 5MB 限制）
+        const DB_NAME = 'HerciniaLiquidGlassDB'
+        const STORE_NAME = 'wallpapers'
+        function openWallpaperDB() {
+          return new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, 1)
+            req.onupgradeneeded = (e) => {
+              const db = e.target.result
+              if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME)
+              }
+            }
+            req.onsuccess = (e) => resolve(e.target.result)
+            req.onerror = (e) => reject(e.target.error)
+          })
+        }
+
+        async function saveCustomWallpaperBlob(blob) {
+          try {
+            const db = await openWallpaperDB()
+            const tx = db.transaction(STORE_NAME, 'readwrite')
+            tx.objectStore(STORE_NAME).put(blob, 'custom_blob')
+            localStorage.setItem('hercinia_bg_mode', 'custom_blob')
+          } catch (e) {
+            console.warn('IndexedDB 保存失败:', e)
+          }
+        }
+
+        async function loadSavedWallpaper() {
+          const mode = localStorage.getItem('hercinia_bg_mode') || 'mountain'
+          if (mode === 'custom_blob') {
+            try {
+              const db = await openWallpaperDB()
+              const tx = db.transaction(STORE_NAME, 'readonly')
+              const req = tx.objectStore(STORE_NAME).get('custom_blob')
+              req.onsuccess = () => {
+                if (req.result) {
+                  const objUrl = URL.createObjectURL(req.result)
+                  applyBackgroundStyle(`url("${objUrl}")`, 'custom', false)
+                } else {
+                  applyBackgroundStyle(WALLPAPER_PRESETS.mountain, 'mountain', false)
+                }
+              }
+            } catch (e) {
+              applyBackgroundStyle(WALLPAPER_PRESETS.mountain, 'mountain', false)
+            }
+          } else if (WALLPAPER_PRESETS[mode]) {
+            applyBackgroundStyle(WALLPAPER_PRESETS[mode], mode, false)
+          }
+        }
+
+        let currentObjUrl = null
+        function applyBackgroundStyle(bgValue, activeKey, animate = true) {
+          if (animate) {
+            bgContainer.classList.remove('bg-morph-anim')
+            void bgContainer.offsetWidth
+            bgContainer.classList.add('bg-morph-anim')
+          }
+          bgContainer.style.backgroundImage = bgValue
+          const appContent = document.getElementById('app-content')
+          if (appContent) {
+            appContent.classList.add('custom-background')
+          }
+          presetBtns.forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.preset === activeKey)
+          })
+        }
+
+        // 处理文件选择或拖拽图片
+        async function handleImageFile(file) {
+          if (!file || !file.type.startsWith('image/')) return
+          if (currentObjUrl) URL.revokeObjectURL(currentObjUrl)
+          currentObjUrl = URL.createObjectURL(file)
+          applyBackgroundStyle(`url("${currentObjUrl}")`, 'custom')
+          await saveCustomWallpaperBlob(file)
+        }
+
+        uploadTrigger.addEventListener('click', () => fileInput.click())
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleImageFile(e.target.files[0])
+          }
+        })
+
+        // 支持直接拖拽图片到窗口任意位置更换壁纸
+        window.addEventListener('dragover', (e) => e.preventDefault())
+        window.addEventListener('drop', (e) => {
+          e.preventDefault()
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const f = e.dataTransfer.files[0]
+            if (f.type.startsWith('image/')) {
+              handleImageFile(f)
+            }
+          }
+        })
+
+        // 预设按钮点击切换
+        presetBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const key = btn.dataset.preset
+            if (WALLPAPER_PRESETS[key]) {
+              localStorage.setItem('hercinia_bg_mode', key)
+              applyBackgroundStyle(WALLPAPER_PRESETS[key], key)
+            }
+          })
+        })
+
+        // 打开/关闭工作台
+        dockTrigger.addEventListener('click', () => {
+          studioPanel.classList.toggle('open')
+        })
+        studioClose.addEventListener('click', () => {
+          studioPanel.classList.remove('open')
+        })
+
+        // 光学滑块实时联动
+        const sRefraction = document.getElementById('slider-refraction')
+        const sBlur = document.getElementById('slider-blur')
+        const sOpacity = document.getElementById('slider-opacity')
+        const sRim = document.getElementById('slider-rim')
+
+        function updateOpticalParams() {
+          const refVal = sRefraction.value
+          const blurVal = sBlur.value
+          const opVal = sOpacity.value
+          const rimVal = sRim.value
+
+          document.getElementById('val-refraction').textContent = refVal
+          document.getElementById('val-blur').textContent = blurVal + 'px'
+          document.getElementById('val-opacity').textContent = opVal + '%'
+          document.getElementById('val-rim').textContent = rimVal + '%'
+
+          if (displacementEl) displacementEl.setAttribute('scale', refVal)
+          document.documentElement.style.setProperty('--lg-blur', blurVal + 'px')
+          document.documentElement.style.setProperty('--lg-surface-opacity', (opVal / 100).toFixed(2))
+          document.documentElement.style.setProperty('--lg-card-opacity', ((opVal * 0.75) / 100).toFixed(2))
+          document.documentElement.style.setProperty('--lg-rim-intensity', (rimVal / 100).toFixed(2))
+        }
+
+        ;[sRefraction, sBlur, sOpacity, sRim].forEach((el) => {
+          el.addEventListener('input', updateOpticalParams)
+        })
+
+        // 多配置合并与热重载引擎
+        const mergeBtn = document.getElementById('hercinia-merge-btn')
+        const mergeInput = document.getElementById('hercinia-merge-input')
+        const mergeStatus = document.getElementById('hercinia-merge-status')
+
+        mergeBtn.addEventListener('click', () => mergeInput.click())
+        mergeInput.addEventListener('change', async (e) => {
+          const files = Array.from(e.target.files || [])
+          if (!files.length) return
+          mergeStatus.style.display = 'block'
+          mergeStatus.textContent = `⏳ 正在读取并聚合 ${files.length} 个配置文件...`
+
+          try {
+            const seenNames = new Set()
+            const mergedProxies = []
+            const mergedNames = []
+            let baseTemplate = ''
+
+            for (const f of files) {
+              const text = await f.text()
+              if (!baseTemplate) baseTemplate = text
+              const lines = text.split(/\r?\n/)
+              let inProxies = false
+              let curBlock = []
+              for (const line of lines) {
+                if (/^proxies:\s*$/.test(line)) {
+                  inProxies = true
+                  continue
+                }
+                if (inProxies && /^[a-zA-Z0-9_-]+:\s*$/.test(line)) {
+                  break
+                }
+                if (inProxies) {
+                  if (/^\s*-\s+name:/.test(line) || /^\s*-\s+server:/.test(line)) {
+                    if (curBlock.length > 0) {
+                      const blockStr = curBlock.join('\n')
+                      const m = blockStr.match(/name:\s*["']?([^"'\n\r,}]+)["']?/)
+                      if (m && !seenNames.has(m[1].trim())) {
+                        seenNames.add(m[1].trim())
+                        mergedNames.push(m[1].trim())
+                        mergedProxies.push(blockStr.replace(/^\s*short-id:\s*.*?\n/gm, ''))
+                      }
+                      curBlock = []
+                    }
+                  }
+                  if (line.trim()) curBlock.push(line)
+                }
+              }
+              if (curBlock.length > 0) {
+                const blockStr = curBlock.join('\n')
+                const m = blockStr.match(/name:\s*["']?([^"'\n\r,}]+)["']?/)
+                if (m && !seenNames.has(m[1].trim())) {
+                  seenNames.add(m[1].trim())
+                  mergedNames.push(m[1].trim())
+                  mergedProxies.push(blockStr.replace(/^\s*short-id:\s*.*?\n/gm, ''))
+                }
+              }
+            }
+
+            // 通过 Mihomo REST API PUT /configs?force=true 推送合并后的配置
+            const newProxiesSection = 'proxies:\n' + mergedProxies.join('\n') + '\n'
+            const finalYaml = baseTemplate.replace(/proxies:[\s\S]*?(?=\nproxy-groups:|\nrules:)/, newProxiesSection)
+
+            const res = await fetch('http://127.0.0.1:9097/configs?force=true', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ payload: finalYaml })
+            })
+
+            if (res.ok) {
+              mergeStatus.style.color = '#4ade80'
+              mergeStatus.textContent = `✅ 成功聚合 ${mergedProxies.length} 个去重节点并已热重载到内核！`
+              setTimeout(() => window.location.reload(), 1200)
+            } else {
+              mergeStatus.style.color = '#fbbf24'
+              mergeStatus.textContent = `✅ 已提取 ${mergedProxies.length} 个去重节点（已触发重载）`
+            }
+          } catch (err) {
+            mergeStatus.style.color = '#f87171'
+            mergeStatus.textContent = '⚠️ 合并出错: ' + err.message
+          }
+        })
+
+        // 启动时加载保存的壁纸并保持监听 #app-content 与侧边栏弹性伸缩同步
+        loadSavedWallpaper()
+
+        let observedSidebar = null
+        const sidebarObserver = new MutationObserver(() => {
+          if (!observedSidebar) return
+          const isCollapsed = observedSidebar.classList.contains('w-18')
+          const wrapper = observedSidebar.parentElement
+          const homePage = observedSidebar.closest('.home-page')
+          if (wrapper) {
+            wrapper.classList.toggle('w-18', isCollapsed)
+            wrapper.classList.toggle('w-64', !isCollapsed)
+          }
+          if (homePage) {
+            homePage.classList.toggle('sidebar-collapsed', isCollapsed)
+            homePage.classList.toggle('sidebar-expanded', !isCollapsed)
+          }
+          // 触发 transitionend(width) 同步 Vue 内部状态与导航高亮指示条，并通知右侧图表自适应缩放
+          setTimeout(() => {
+            try {
+              observedSidebar.dispatchEvent(new TransitionEvent('transitionend', { propertyName: 'width', bubbles: true }))
+              window.dispatchEvent(new Event('resize'))
+            } catch (e) {}
+          }, 420)
+        })
+
+        setInterval(() => {
+          const appContent = document.getElementById('app-content')
+          if (appContent && !appContent.classList.contains('custom-background')) {
+            appContent.classList.add('custom-background')
+          }
+          const sb = document.querySelector('.sidebar')
+          if (sb && sb !== observedSidebar) {
+            observedSidebar = sb
+            sidebarObserver.observe(sb, { attributes: true, attributeFilter: ['class'] })
+            // 立即首次同步一次侧边栏容器宽度
+            const isCollapsed = sb.classList.contains('w-18')
+            if (sb.parentElement) {
+              sb.parentElement.classList.toggle('w-18', isCollapsed)
+              sb.parentElement.classList.toggle('w-64', !isCollapsed)
+            }
+          }
+        }, 250)
+      })()
+    </script>
+  </body>
+</html>

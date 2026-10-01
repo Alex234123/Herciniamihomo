@@ -1,0 +1,1054 @@
+﻿mixed-port: 7890
+external-controller: 127.0.0.1:9097
+secret: ''
+external-ui: ui
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: warning
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+geodata-mode: true
+geo-auto-update: false
+geo-update-interval: 24
+geox-url:
+  geoip: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
+  geosite: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat
+  mmdb: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+sniffer:
+  enable: true
+  sniff:
+    TLS:
+      ports:
+      - 443
+      - 8443
+    HTTP:
+      ports:
+      - 80
+      - 8080-8880
+      override-destination: true
+    QUIC:
+      ports:
+      - 443
+      - 8443
+  skip-domain:
+  - +.3c3u.icu
+  - +.3c3u.ong
+  - Mijia Cloud
+  - dlg.io.mi.com
+  - +.push.apple.com
+  - +.googlevideo.com
+  - +.qq.com
+  - +.tencent.com
+  - +.wechat.com
+  - +.servicewechat.com
+  - +.gtimg.com
+  - +.gtimg.cn
+  - +.qpic.cn
+  - +.qlogo.cn
+  - +.tenpay.com
+  - +.myqcloud.com
+  - +.qcloud.com
+  - +.douyin.com
+  - +.douyincdn.com
+  - +.douyinpic.com
+  - +.douyinstatic.com
+  - +.douyinliving.com
+  - +.iesdouyin.com
+  - +.douyinvod.com
+  - +.douyinvideo.net
+  - +.amemv.com
+  - +.snssdk.com
+  - +.byteimg.com
+  - +.bytecdn.cn
+  - +.ibytedtos.com
+  - +.zijieapi.com
+  - +.pstatp.com
+  - +.toutiao.com
+  - +.toutiaovod.com
+  - +.bytedance.net
+  - +.xiaohongshu.com
+  - +.xhscdn.com
+  - +.xhscdn.net
+  - +.xhslink.com
+  - +.xhsimg.com
+  - +.taobao.com
+  - +.tmall.com
+  - +.tbcdn.cn
+  - +.alicdn.com
+  - +.alibaba.com
+  - +.alibabausercontent.com
+  - +.alipay.com
+  - +.alipayobjects.com
+  - +.goofish.com
+  - +.idlefish.com
+  - +.aliyun.com
+  - +.aliyuncs.com
+  - +.mmstat.com
+  - +.cainiao.com
+  - +.amap.com
+  - +.autonavi.com
+  - +.115.com
+  - +.115cdn.com
+  - +.115cdn.net
+  - +.115img.com
+  - +.116cd.cn
+  - +.116cd.com
+  - +.116cd.net
+  - +.anxia.com
+  - +.sq.cc
+  - fhnfile.oss-cn-shenzhen.aliyuncs.com
+tun:
+  enable: false
+  stack: mixed
+  mtu: 1492
+  dns-hijack:
+  - any:53
+  - tcp://any:53
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+proxies:
+  # 璇烽€氳繃杞欢鐨勩€愯闃呯鐞嗐€戠晫闈㈠鍏ユ偍鑷繁鐨勮闃呴摼鎺ワ紝鎴栬€呭湪姝ゆ坊鍔犺嚜瀹氫箟鑺傜偣
+  - name: "绀轰緥鑺傜偣 (璇峰鍏ヨ嚜宸辩殑璁㈤槄)"
+    type: http
+    server: 127.0.0.1
+    port: 8080
+proxy-groups:
+- name: PROXY
+  type: select
+  proxies:
+  - AUTO
+  - 妫ｆ瑦鑵?
+  - 缂囧骸娴?
+  - 閺冦儲婀?
+  - 閺傛澘濮為崸?
+  - 閸欑増鍜?
+  - 闂娾晛娴?
+  - 濞喲勫簥
+  - 閸忔湹绮?
+  - 棣冨毉棣冨毇United States 01
+  - 棣冨毉棣冨毇United States 02
+  - 棣冨毉棣冨毇United States 03
+  - 棣冨毉棣冨毇United States 04
+  - 棣冨殽棣冨毑Malaysia 01
+  - 棣冨殽棣冨毑Malaysia 02
+  - 棣冨毇棣冨殲Singapore 01
+  - 棣冨毇棣冨殲Singapore 02
+  - 棣冨毇棣冨殲Singapore 03
+  - 棣冨毇棣冨殲Singapore 04
+  - 棣冨殹棣冨毃Japan 01
+  - 棣冨殹棣冨毃Japan 02
+  - 棣冨殹棣冨毃Japan 03
+  - 棣冨殹棣冨毃Japan 04
+  - 棣冨殺棣冨毆Korea 01
+  - 棣冨殺棣冨毆Korea 02
+  - 棣冨殾棣冨殼Netherlands 01
+  - 棣冨殾棣冨殼Netherlands 02
+  - 棣冨殲棣冨殭United Kingdom 01
+  - 棣冨殲棣冨殭United Kingdom 02
+  - 棣冨殶棣冨殺Hong Kong 03
+  - 棣冨殶棣冨殺Hong Kong 04
+  - 棣冨殶棣冨殺Hong Kong 05
+  - 棣冨殶棣冨殺Hong Kong 06
+  - 棣冨毈棣冨毎Taiwan 03
+  - 棣冨毈棣冨毎Taiwan 04
+  - 棣冨殯棣冨殰Germany 01
+  - 棣冨殯棣冨殰Germany 02
+  - 妫ｆ瑦鑵?- 娑撳缍?- 鐏忓繐螢婵?
+  - 妫ｆ瑦鑵?- 娑撳缍?- 娑擃厼螢婵?
+  - 閸欑増鍜?- 娑撳缍?- 鐏忓繐螢婵?
+  - 閸欑増鍜?- 娑撳缍?- 娑擃厼螢婵?
+  - 閺冦儲婀?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 娑擃厼螢婵?
+  - 缂囧骸娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?rl(娑撹濮?
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?1
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?2
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?3
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?4
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?5
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?6
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?7
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?8
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?9
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?(缁夎濮╂稉鎾舵暏)gemini
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?hy2hop(娑撹濮?
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?rl(娑撹濮?gemini
+  - 缂囧骸娴?DAL婢堆冪敨鐎?rl(娑撹濮?gemini
+  - Scaleway閼藉嘲鍙為弸渚€鈧?rl(娑撹濮?
+  - 缂囧骸娴?LA閺嬩線鈧剮cs-rl(娑撹濮?gemini
+  - 鐡掑﹤宕″▽鍐插敶MAX-rl(缁夎濮╂导姗€鈧?gemini
+  - 鐡掑﹤宕″▽鍐插敶MAX-hy2hop(缁夎濮?gemini
+  - 缂囧骸娴?LA婢堆冪敨鐎?rl(缁備浇浠堥柅?gemini
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - 閹峰鏌夌紒鏉戝閺?rl(娑撹濮?gemini
+  - 缂囧骸娴桳isaMNZ-rl(娑撹濮弎vq)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弎vq)
+  - 閺傛澘濮為崸?1-閹靛婧€閻ｅ懍闊?
+  - 閺傛澘濮為崸?2-閹靛婧€閻ｅ懍闊?
+  - 閻熺偛锛?rl(娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?hy2(娑撹濮?
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弎vq)
+  - 缂囧骸娴桳isaMNZ-hy2hop(娑撹濮弎vq)
+  - 閸旂姵瀣佹径褎鐎柅?rl
+  - 濞夋洖娴?rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-rl
+  - 閸旂姵瀣佹径褎鐎柅?hy2hop
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-hy2hop
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-hy2hop
+  - 瀵板嘲娴?2-rl
+  - 鐡掑﹤宕″▽鍐插敶1-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶1-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶2-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶2-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶3-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶3-hy2hop(缁夎濮?
+  - 缂囧骸娴楅弸渚€鈧喕濮栭崝鐘叉憸-rl
+  - 閻栧崬鐨甸崗鐧塽blin-rl
+  - 缂囧骸娴楅懞婵嗗閸?hy2hop
+  - Premium-妫ｆ瑦鑵怘KT閸熷棗顔?閹垫挻顭肩粊鐐电獢
+  - Premium-妫ｆ瑦鑵怘KT鐎硅泛顔?閹垫挻顭肩粊鐐电獢
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?婢堆冪暔
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?閺傛澘瀵?
+  - Premium-閺冦儲婀版潪顖炴懕01
+  - 缂囧骸娴楅弸渚€鈧?1-rl
+  - 缂囧骸娴楅弸渚€鈧?2-rl
+  - 缂囧骸娴楅弸渚€鈧?3-rl
+  - 缂囧骸娴楅弸渚€鈧?4-rl
+  - 缂囧骸娴楅弸渚€鈧?5-rl-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-rl
+  - 缂囧骸娴楅弸渚€鈧?7-rl
+  - 閺傛澘濮為崸?1-rl
+  - 閺傛澘濮為崸?2-rl
+  - 娑斿苯鍘犻崗?rl
+  - 閺冦儲婀?1-rl
+  - 閺冦儲婀?2-rl
+  - 閺傛澘濮為崸?3-rl
+  - 缂囧骸娴楅弸渚€鈧?1-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?2-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?3-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?4-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?5-hy2hop-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?7-hy2hop
+  - 缂囧骸娴梒csLA1-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA2-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA3-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA4-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 瀵板嘲娴?2-hy2hop
+  - 閻栧崬鐨甸崗鐧塽blin-hy2hop
+  - DIRECT
+- name: AUTO
+  type: url-test
+  proxies:
+  - 棣冨毉棣冨毇United States 01
+  - 棣冨毉棣冨毇United States 02
+  - 棣冨毉棣冨毇United States 03
+  - 棣冨毉棣冨毇United States 04
+  - 棣冨殽棣冨毑Malaysia 01
+  - 棣冨殽棣冨毑Malaysia 02
+  - 棣冨毇棣冨殲Singapore 01
+  - 棣冨毇棣冨殲Singapore 02
+  - 棣冨毇棣冨殲Singapore 03
+  - 棣冨毇棣冨殲Singapore 04
+  - 棣冨殹棣冨毃Japan 01
+  - 棣冨殹棣冨毃Japan 02
+  - 棣冨殹棣冨毃Japan 03
+  - 棣冨殹棣冨毃Japan 04
+  - 棣冨殺棣冨毆Korea 01
+  - 棣冨殺棣冨毆Korea 02
+  - 棣冨殾棣冨殼Netherlands 01
+  - 棣冨殾棣冨殼Netherlands 02
+  - 棣冨殲棣冨殭United Kingdom 01
+  - 棣冨殲棣冨殭United Kingdom 02
+  - 棣冨殶棣冨殺Hong Kong 03
+  - 棣冨殶棣冨殺Hong Kong 04
+  - 棣冨殶棣冨殺Hong Kong 05
+  - 棣冨殶棣冨殺Hong Kong 06
+  - 棣冨毈棣冨毎Taiwan 03
+  - 棣冨毈棣冨毎Taiwan 04
+  - 棣冨殯棣冨殰Germany 01
+  - 棣冨殯棣冨殰Germany 02
+  - 妫ｆ瑦鑵?- 娑撳缍?- 鐏忓繐螢婵?
+  - 妫ｆ瑦鑵?- 娑撳缍?- 娑擃厼螢婵?
+  - 閸欑増鍜?- 娑撳缍?- 鐏忓繐螢婵?
+  - 閸欑増鍜?- 娑撳缍?- 娑擃厼螢婵?
+  - 閺冦儲婀?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 娑擃厼螢婵?
+  - 缂囧骸娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?rl(娑撹濮?
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?1
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?2
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?3
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?4
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?5
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?6
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?7
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?8
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?9
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?(缁夎濮╂稉鎾舵暏)gemini
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?hy2hop(娑撹濮?
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?rl(娑撹濮?gemini
+  - 缂囧骸娴?DAL婢堆冪敨鐎?rl(娑撹濮?gemini
+  - Scaleway閼藉嘲鍙為弸渚€鈧?rl(娑撹濮?
+  - 缂囧骸娴?LA閺嬩線鈧剮cs-rl(娑撹濮?gemini
+  - 鐡掑﹤宕″▽鍐插敶MAX-rl(缁夎濮╂导姗€鈧?gemini
+  - 鐡掑﹤宕″▽鍐插敶MAX-hy2hop(缁夎濮?gemini
+  - 缂囧骸娴?LA婢堆冪敨鐎?rl(缁備浇浠堥柅?gemini
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - 閹峰鏌夌紒鏉戝閺?rl(娑撹濮?gemini
+  - 缂囧骸娴桳isaMNZ-rl(娑撹濮弎vq)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弎vq)
+  - 閺傛澘濮為崸?1-閹靛婧€閻ｅ懍闊?
+  - 閺傛澘濮為崸?2-閹靛婧€閻ｅ懍闊?
+  - 閻熺偛锛?rl(娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?hy2(娑撹濮?
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弎vq)
+  - 缂囧骸娴桳isaMNZ-hy2hop(娑撹濮弎vq)
+  - 閸旂姵瀣佹径褎鐎柅?rl
+  - 濞夋洖娴?rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-rl
+  - 閸旂姵瀣佹径褎鐎柅?hy2hop
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-hy2hop
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-hy2hop
+  - 瀵板嘲娴?2-rl
+  - 鐡掑﹤宕″▽鍐插敶1-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶1-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶2-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶2-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶3-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶3-hy2hop(缁夎濮?
+  - 缂囧骸娴楅弸渚€鈧喕濮栭崝鐘叉憸-rl
+  - 閻栧崬鐨甸崗鐧塽blin-rl
+  - 缂囧骸娴楅懞婵嗗閸?hy2hop
+  - Premium-妫ｆ瑦鑵怘KT閸熷棗顔?閹垫挻顭肩粊鐐电獢
+  - Premium-妫ｆ瑦鑵怘KT鐎硅泛顔?閹垫挻顭肩粊鐐电獢
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?婢堆冪暔
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?閺傛澘瀵?
+  - Premium-閺冦儲婀版潪顖炴懕01
+  - 缂囧骸娴楅弸渚€鈧?1-rl
+  - 缂囧骸娴楅弸渚€鈧?2-rl
+  - 缂囧骸娴楅弸渚€鈧?3-rl
+  - 缂囧骸娴楅弸渚€鈧?4-rl
+  - 缂囧骸娴楅弸渚€鈧?5-rl-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-rl
+  - 缂囧骸娴楅弸渚€鈧?7-rl
+  - 閺傛澘濮為崸?1-rl
+  - 閺傛澘濮為崸?2-rl
+  - 娑斿苯鍘犻崗?rl
+  - 閺冦儲婀?1-rl
+  - 閺冦儲婀?2-rl
+  - 閺傛澘濮為崸?3-rl
+  - 缂囧骸娴楅弸渚€鈧?1-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?2-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?3-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?4-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?5-hy2hop-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?7-hy2hop
+  - 缂囧骸娴梒csLA1-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA2-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA3-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA4-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 瀵板嘲娴?2-hy2hop
+  - 閻栧崬鐨甸崗鐧塽blin-hy2hop
+  url: https://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  lazy: true
+- name: 妫ｆ瑦鑵?
+  type: select
+  proxies:
+  - 棣冨殶棣冨殺Hong Kong 03
+  - 棣冨殶棣冨殺Hong Kong 04
+  - 棣冨殶棣冨殺Hong Kong 05
+  - 棣冨殶棣冨殺Hong Kong 06
+  - 妫ｆ瑦鑵?- 娑撳缍?- 鐏忓繐螢婵?
+  - 妫ｆ瑦鑵?- 娑撳缍?- 娑擃厼螢婵?
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?1
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?2
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?3
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?4
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?5
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?6
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?7
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?8
+  - 妫ｆ瑦鑵恏ytron-閹靛婧€閻ｅ懍闊?9
+  - Premium-妫ｆ瑦鑵怘KT閸熷棗顔?閹垫挻顭肩粊鐐电獢
+  - Premium-妫ｆ瑦鑵怘KT鐎硅泛顔?閹垫挻顭肩粊鐐电獢
+- name: 缂囧骸娴?
+  type: select
+  proxies:
+  - 棣冨毉棣冨毇United States 01
+  - 棣冨毉棣冨毇United States 02
+  - 棣冨毉棣冨毇United States 03
+  - 棣冨毉棣冨毇United States 04
+  - 缂囧骸娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 缂囧骸娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?(缁夎濮╂稉鎾舵暏)gemini
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?rl(娑撹濮?gemini
+  - 缂囧骸娴?DAL婢堆冪敨鐎?rl(娑撹濮?gemini
+  - 缂囧骸娴?LA閺嬩線鈧剮cs-rl(娑撹濮?gemini
+  - 缂囧骸娴?LA婢堆冪敨鐎?rl(缁備浇浠堥柅?gemini
+  - 缂囧骸娴?缂囧氦銈块弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - 缂囧骸娴桳isaMNZ-rl(娑撹濮弎vq)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-閹靛婧€閻ｅ懍闊?娑撹濮弎vq)
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弌vo)
+  - 缂囧骸娴楀ú娑欐綈閻A-hy2hop(娑撹濮弎vq)
+  - 缂囧骸娴桳isaMNZ-hy2hop(娑撹濮弎vq)
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-rl
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N1(閻㈠吀淇?-hy2hop
+  - 缂囧骸娴楁导鎴炴焿妞ょ房N2(閻㈠吀淇?-hy2hop
+  - 缂囧骸娴楅弸渚€鈧喕濮栭崝鐘叉憸-rl
+  - 缂囧骸娴楅懞婵嗗閸?hy2hop
+  - 缂囧骸娴楅弸渚€鈧?1-rl
+  - 缂囧骸娴楅弸渚€鈧?2-rl
+  - 缂囧骸娴楅弸渚€鈧?3-rl
+  - 缂囧骸娴楅弸渚€鈧?4-rl
+  - 缂囧骸娴楅弸渚€鈧?5-rl-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-rl
+  - 缂囧骸娴楅弸渚€鈧?7-rl
+  - 缂囧骸娴楅弸渚€鈧?1-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?2-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?3-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?4-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?5-hy2hop-gemini
+  - 缂囧骸娴楅弸渚€鈧?6-hy2hop
+  - 缂囧骸娴楅弸渚€鈧?7-hy2hop
+  - 缂囧骸娴梒csLA1-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA2-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA3-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+  - 缂囧骸娴梒csLA4-hy2hop(閻㈠吀淇婇懕鏃堚偓?
+- name: 閺冦儲婀?
+  type: select
+  proxies:
+  - 棣冨殹棣冨毃Japan 01
+  - 棣冨殹棣冨毃Japan 02
+  - 棣冨殹棣冨毃Japan 03
+  - 棣冨殹棣冨毃Japan 04
+  - 閺冦儲婀?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺冦儲婀版径?- 缁夎濮?- 娑擃厼螢婵?
+  - Premium-閺冦儲婀版潪顖炴懕01
+  - 閺冦儲婀?1-rl
+  - 閺冦儲婀?2-rl
+- name: 閺傛澘濮為崸?
+  type: select
+  proxies:
+  - 棣冨毇棣冨殲Singapore 01
+  - 棣冨毇棣冨殲Singapore 02
+  - 棣冨毇棣冨殲Singapore 03
+  - 棣冨毇棣冨殲Singapore 04
+  - 閺傛澘濮為崸?- 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸?- 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 鐏忓繐螢婵?
+  - 閺傛澘濮為崸鈥愁槵 - 缁夎濮?- 娑擃厼螢婵?
+  - 閺傛澘濮為崸?1-閹靛婧€閻ｅ懍闊?
+  - 閺傛澘濮為崸?2-閹靛婧€閻ｅ懍闊?
+  - 閺傛澘濮為崸?1-rl
+  - 閺傛澘濮為崸?2-rl
+  - 閺傛澘濮為崸?3-rl
+- name: 閸欑増鍜?
+  type: select
+  proxies:
+  - 棣冨毈棣冨毎Taiwan 03
+  - 棣冨毈棣冨毎Taiwan 04
+  - 閸欑増鍜?- 娑撳缍?- 鐏忓繐螢婵?
+  - 閸欑増鍜?- 娑撳缍?- 娑擃厼螢婵?
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?婢堆冪暔
+  - Premium-閸欑増鍜曟い鍓侀獓閸熷棗顔?閺傛澘瀵?
+- name: 闂娾晛娴?
+  type: select
+  proxies:
+  - 棣冨殺棣冨毆Korea 01
+  - 棣冨殺棣冨毆Korea 02
+- name: 濞喲勫簥
+  type: select
+  proxies:
+  - 棣冨殾棣冨殼Netherlands 01
+  - 棣冨殾棣冨殼Netherlands 02
+  - 棣冨殲棣冨殭United Kingdom 01
+  - 棣冨殲棣冨殭United Kingdom 02
+  - 棣冨殯棣冨殰Germany 01
+  - 棣冨殯棣冨殰Germany 02
+  - 瀵板嘲娴?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 鐏忓繐螢婵?
+  - 瀵板嘲娴楁径?- 閻㈠吀淇?- 娑擃厼螢婵?
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?rl(娑撹濮?
+  - 瀵板嘲娴楀▔鏇炲彏閸忓顩?hy2hop(娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?rl(娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?閹靛婧€閻ｅ懍闊?娑撹濮?
+  - 閻熺偛锛?rl(娑撹濮?
+  - Scaleway閼藉嘲鍙為弸渚€鈧?hy2(娑撹濮?
+  - 濞夋洖娴?rl
+  - 瀵板嘲娴?2-rl
+  - 閻栧崬鐨甸崗鐧塽blin-rl
+  - 娑斿苯鍘犻崗?rl
+  - 瀵板嘲娴?2-hy2hop
+  - 閻栧崬鐨甸崗鐧塽blin-hy2hop
+- name: 閸忔湹绮?
+  type: select
+  proxies:
+  - 棣冨殽棣冨毑Malaysia 01
+  - 棣冨殽棣冨毑Malaysia 02
+  - 鐡掑﹤宕″▽鍐插敶MAX-rl(缁夎濮╂导姗€鈧?gemini
+  - 鐡掑﹤宕″▽鍐插敶MAX-hy2hop(缁夎濮?gemini
+  - 閸旂姵瀣佹径褎鐎柅?rl
+  - 閸旂姵瀣佹径褎鐎柅?hy2hop
+  - 鐡掑﹤宕″▽鍐插敶1-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶1-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶2-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶2-hy2hop(缁夎濮?
+  - 鐡掑﹤宕″▽鍐插敶3-rl(缁夎濮╂导姗€鈧?
+  - 鐡掑﹤宕″▽鍐插敶3-hy2hop(缁夎濮?
+  - 閹峰鏌夌紒鏉戝閺?rl(娑撹濮?gemini
+dns:
+  enable: true
+  listen: 127.0.0.1:1053
+  cache-algorithm: arc
+  ipv6: false
+  prefer-ipv6: false
+  prefer-h3: false
+  use-hosts: true
+  use-system-hosts: true
+  respect-rules: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
+  fake-ip-filter:
+  - +.3c3u.icu
+  - +.3c3u.ong
+  - '*.lan'
+  - '*.local'
+  - +.localdomain
+  - localhost.ptlogin2.qq.com
+  - +.qq.com
+  - +.tencent.com
+  - +.wechat.com
+  - +.servicewechat.com
+  - +.gtimg.com
+  - +.gtimg.cn
+  - +.qpic.cn
+  - +.qlogo.cn
+  - +.tenpay.com
+  - +.myqcloud.com
+  - +.qcloud.com
+  - +.douyin.com
+  - +.douyincdn.com
+  - +.douyinpic.com
+  - +.douyinstatic.com
+  - +.douyinliving.com
+  - +.iesdouyin.com
+  - +.douyinvod.com
+  - +.douyinvideo.net
+  - +.amemv.com
+  - +.snssdk.com
+  - +.byteimg.com
+  - +.bytecdn.cn
+  - +.ibytedtos.com
+  - +.zijieapi.com
+  - +.pstatp.com
+  - +.toutiao.com
+  - +.toutiaovod.com
+  - +.bytedance.net
+  - +.xiaohongshu.com
+  - +.xhscdn.com
+  - +.xhscdn.net
+  - +.xhslink.com
+  - +.xhsimg.com
+  - time.windows.com
+  - time.apple.com
+  - time.android.com
+  - +.xn--ngstr-lra8j.com
+  - +.ntp.org.cn
+  - +.pool.ntp.org
+  default-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  nameserver-policy:
+    geosite:private,cn,geolocation-cn,apple,microsoft,steam@cn:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.windows.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.wns.windows.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.msftncsi.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.msftconnecttest.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.jsdelivr.net:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.5181688.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.5188333.xyz:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.5188777.xyz:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.ovonice.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.palmed.top:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.chocolateminecraft.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.pysio.online:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.speedtest.net:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.ooklaserver.net:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.speed.cloudflare.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.measurementlab.net:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.microsoft.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.live.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.office.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.microsoftonline.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.sharepointonline.com:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.google.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.googleapis.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.googleapis.cn:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.gstatic.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.gvt1.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.gvt2.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.gvt3.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.googleusercontent.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.ggpht.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.android.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.xn--ngstr-lra8j.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.openai.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.chatgpt.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.anthropic.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.claude.ai:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.github.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.githubusercontent.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.githubassets.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.github.io:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.github.dev:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.ghcr.io:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.raw.githubusercontent.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.wikipedia.org:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.wikimedia.org:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.instagram.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.facebook.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.discord.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.reddit.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.twitch.tv:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.tiktok.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    +.paypal.com:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+    geosite:geolocation-!cn:
+    - https://1.1.1.1/dns-query#PROXY
+    - https://dns.google/dns-query#PROXY
+  nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  - https://dns.alidns.com/dns-query
+  fallback:
+  - https://1.1.1.1/dns-query#PROXY
+  - https://dns.google/dns-query#PROXY
+  proxy-server-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  direct-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  - https://dns.alidns.com/dns-query
+  - https://doh.pub/dns-query
+  direct-nameserver-follow-policy: true
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+    - 240.0.0.0/4
+rules:
+- IP-CIDR,8.8.8.8/32,DIRECT,no-resolve
+- IP-CIDR,8.8.4.4/32,DIRECT,no-resolve
+- IP-CIDR,1.1.1.1/32,DIRECT,no-resolve
+- IP-CIDR,1.0.0.1/32,DIRECT,no-resolve
+- IP-CIDR,9.9.9.9/32,DIRECT,no-resolve
+- IP-CIDR,149.112.112.112/32,DIRECT,no-resolve
+- IP-CIDR,208.67.222.222/32,DIRECT,no-resolve
+- IP-CIDR,208.67.220.220/32,DIRECT,no-resolve
+- IP-CIDR,223.5.5.5/32,DIRECT,no-resolve
+- IP-CIDR,119.29.29.29/32,DIRECT,no-resolve
+- IP-CIDR,114.114.114.114/32,DIRECT,no-resolve
+- IP-CIDR,20.201.213.2/32,DIRECT,no-resolve
+- IP-CIDR,20.201.213.3/32,DIRECT,no-resolve
+- AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,alibaba)),REJECT
+- IP-CIDR6,::1/128,DIRECT,no-resolve
+- IP-CIDR6,fc00::/7,DIRECT,no-resolve
+- IP-CIDR6,fe80::/10,DIRECT,no-resolve
+- IP-CIDR6,ff00::/8,DIRECT,no-resolve
+- IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+- IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+- IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+- IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+- IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+- IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+- IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+- IP-CIDR,240.0.0.0/4,DIRECT,no-resolve
+- GEOSITE,private,DIRECT
+- GEOSITE,alibaba,DIRECT
+- DOMAIN-SUFFIX,qq.com,DIRECT
+- DOMAIN-SUFFIX,tencent.com,DIRECT
+- DOMAIN-SUFFIX,wechat.com,DIRECT
+- DOMAIN-SUFFIX,servicewechat.com,DIRECT
+- DOMAIN-SUFFIX,gtimg.com,DIRECT
+- DOMAIN-SUFFIX,gtimg.cn,DIRECT
+- DOMAIN-SUFFIX,qpic.cn,DIRECT
+- DOMAIN-SUFFIX,qlogo.cn,DIRECT
+- DOMAIN-SUFFIX,tenpay.com,DIRECT
+- DOMAIN-SUFFIX,myqcloud.com,DIRECT
+- DOMAIN-SUFFIX,qcloud.com,DIRECT
+- DOMAIN-SUFFIX,douyin.com,DIRECT
+- DOMAIN-SUFFIX,douyincdn.com,DIRECT
+- DOMAIN-SUFFIX,douyinpic.com,DIRECT
+- DOMAIN-SUFFIX,douyinstatic.com,DIRECT
+- DOMAIN-SUFFIX,douyinliving.com,DIRECT
+- DOMAIN-SUFFIX,iesdouyin.com,DIRECT
+- DOMAIN-SUFFIX,douyinvod.com,DIRECT
+- DOMAIN-SUFFIX,douyinvideo.net,DIRECT
+- DOMAIN-SUFFIX,amemv.com,DIRECT
+- DOMAIN-SUFFIX,snssdk.com,DIRECT
+- DOMAIN-SUFFIX,byteimg.com,DIRECT
+- DOMAIN-SUFFIX,bytecdn.cn,DIRECT
+- DOMAIN-SUFFIX,ibytedtos.com,DIRECT
+- DOMAIN-SUFFIX,zijieapi.com,DIRECT
+- DOMAIN-SUFFIX,pstatp.com,DIRECT
+- DOMAIN-SUFFIX,toutiao.com,DIRECT
+- DOMAIN-SUFFIX,toutiaovod.com,DIRECT
+- DOMAIN-SUFFIX,bytedance.net,DIRECT
+- DOMAIN-SUFFIX,xiaohongshu.com,DIRECT
+- DOMAIN-SUFFIX,xhscdn.com,DIRECT
+- DOMAIN-SUFFIX,xhscdn.net,DIRECT
+- DOMAIN-SUFFIX,xhslink.com,DIRECT
+- DOMAIN-SUFFIX,xhsimg.com,DIRECT
+- DOMAIN-SUFFIX,taobao.com,DIRECT
+- DOMAIN-SUFFIX,tmall.com,DIRECT
+- DOMAIN-SUFFIX,tbcdn.cn,DIRECT
+- DOMAIN-SUFFIX,alicdn.com,DIRECT
+- DOMAIN-SUFFIX,alibaba.com,DIRECT
+- DOMAIN-SUFFIX,alibabausercontent.com,DIRECT
+- DOMAIN-SUFFIX,alipay.com,DIRECT
+- DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+- DOMAIN-SUFFIX,goofish.com,DIRECT
+- DOMAIN-SUFFIX,idlefish.com,DIRECT
+- DOMAIN-SUFFIX,aliyun.com,DIRECT
+- DOMAIN-SUFFIX,aliyuncs.com,DIRECT
+- DOMAIN-SUFFIX,mmstat.com,DIRECT
+- DOMAIN-SUFFIX,cainiao.com,DIRECT
+- DOMAIN-SUFFIX,amap.com,DIRECT
+- DOMAIN-SUFFIX,autonavi.com,DIRECT
+- DOMAIN-SUFFIX,bilibili.com,DIRECT
+- DOMAIN-SUFFIX,bilivideo.com,DIRECT
+- DOMAIN-SUFFIX,bilivideo.cn,DIRECT
+- DOMAIN-SUFFIX,biliapi.net,DIRECT
+- DOMAIN-SUFFIX,biliapi.com,DIRECT
+- DOMAIN-SUFFIX,bilstatic.com,DIRECT
+- DOMAIN-SUFFIX,biligame.com,DIRECT
+- DOMAIN-SUFFIX,bilivod.com,DIRECT
+- DOMAIN-SUFFIX,baidu.com,DIRECT
+- DOMAIN-SUFFIX,bdstatic.com,DIRECT
+- DOMAIN-SUFFIX,bdimg.com,DIRECT
+- DOMAIN-KEYWORD,baidu,DIRECT
+- DOMAIN-SUFFIX,163.com,DIRECT
+- DOMAIN-SUFFIX,126.com,DIRECT
+- DOMAIN-SUFFIX,126.net,DIRECT
+- DOMAIN-SUFFIX,127.net,DIRECT
+- DOMAIN-SUFFIX,netease.com,DIRECT
+- DOMAIN-SUFFIX,jd.com,DIRECT
+- DOMAIN-SUFFIX,jdcloud.com,DIRECT
+- DOMAIN-SUFFIX,meituan.com,DIRECT
+- DOMAIN-SUFFIX,meituan.net,DIRECT
+- DOMAIN-SUFFIX,dianping.com,DIRECT
+- DOMAIN-SUFFIX,zhihu.com,DIRECT
+- DOMAIN-SUFFIX,zhimg.com,DIRECT
+- DOMAIN-SUFFIX,115.com,DIRECT
+- DOMAIN-SUFFIX,115cdn.com,DIRECT
+- DOMAIN-SUFFIX,115cdn.net,DIRECT
+- DOMAIN-SUFFIX,115img.com,DIRECT
+- DOMAIN-SUFFIX,116cd.cn,DIRECT
+- DOMAIN-SUFFIX,116cd.com,DIRECT
+- DOMAIN-SUFFIX,116cd.net,DIRECT
+- DOMAIN-SUFFIX,anxia.com,DIRECT
+- DOMAIN-SUFFIX,sq.cc,DIRECT
+- DOMAIN,fhnfile.oss-cn-shenzhen.aliyuncs.com,DIRECT
+- DOMAIN-SUFFIX,3c3u.org,DIRECT
+- DOMAIN-SUFFIX,3c3u.icu,DIRECT
+- DOMAIN-SUFFIX,3c3u.ong,DIRECT
+- DOMAIN-SUFFIX,ncat3.com,DIRECT
+- DOMAIN-SUFFIX,ncat21.com,DIRECT
+- DOMAIN-SUFFIX,ncat22.com,DIRECT
+- DOMAIN-SUFFIX,ncat23.com,DIRECT
+- DOMAIN-SUFFIX,5181688.com,DIRECT
+- DOMAIN-SUFFIX,5188333.xyz,DIRECT
+- DOMAIN-SUFFIX,5188777.xyz,DIRECT
+- DOMAIN-SUFFIX,ovonice.com,DIRECT
+- DOMAIN-SUFFIX,palmed.top,DIRECT
+- DOMAIN-SUFFIX,chocolateminecraft.com,DIRECT
+- DOMAIN-SUFFIX,pysio.online,DIRECT
+- DOMAIN-SUFFIX,jsdelivr.net,DIRECT
+- DOMAIN-SUFFIX,jsd.cdn.zzko.cn,DIRECT
+- DOMAIN-SUFFIX,ghproxy.com,DIRECT
+- DOMAIN-SUFFIX,gh-proxy.com,DIRECT
+- DOMAIN-SUFFIX,mirror.ghproxy.com,DIRECT
+- DOMAIN-SUFFIX,speedtest.net,DIRECT
+- DOMAIN-SUFFIX,ooklaserver.net,DIRECT
+- DOMAIN-SUFFIX,speedtestcustom.com,DIRECT
+- DOMAIN-SUFFIX,speed.cloudflare.com,DIRECT
+- DOMAIN-SUFFIX,measurementlab.net,DIRECT
+- DOMAIN-SUFFIX,speedtest.cn,DIRECT
+- DOMAIN-SUFFIX,github.com,PROXY
+- DOMAIN-SUFFIX,github.io,PROXY
+- DOMAIN-SUFFIX,github.dev,PROXY
+- DOMAIN-SUFFIX,githubusercontent.com,PROXY
+- DOMAIN-SUFFIX,githubassets.com,PROXY
+- DOMAIN-SUFFIX,ghcr.io,PROXY
+- GEOSITE,github,PROXY
+- DOMAIN,ipv6.msftncsi.com,REJECT
+- DOMAIN,ipv6.msftconnecttest.com,REJECT
+- GEOSITE,microsoft,DIRECT
+- DOMAIN-SUFFIX,microsoft.com,DIRECT
+- DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+- DOMAIN-SUFFIX,msftncsi.com,DIRECT
+- DOMAIN-SUFFIX,windowsupdate.com,DIRECT
+- DOMAIN-SUFFIX,office.com,DIRECT
+- DOMAIN-SUFFIX,office.net,DIRECT
+- DOMAIN-SUFFIX,office365.com,DIRECT
+- DOMAIN-SUFFIX,live.com,DIRECT
+- DOMAIN-SUFFIX,live.net,DIRECT
+- DOMAIN-SUFFIX,outlook.com,DIRECT
+- DOMAIN-SUFFIX,microsoftonline.com,DIRECT
+- DOMAIN-SUFFIX,microsoftonline-p.com,DIRECT
+- DOMAIN-SUFFIX,sharepoint.com,DIRECT
+- DOMAIN-SUFFIX,sharepointonline.com,DIRECT
+- DOMAIN-SUFFIX,onedrive.com,DIRECT
+- DOMAIN-SUFFIX,skype.com,DIRECT
+- DOMAIN-SUFFIX,azureedge.net,DIRECT
+- DOMAIN-SUFFIX,msauth.net,DIRECT
+- DOMAIN-SUFFIX,msauthimages.net,DIRECT
+- DOMAIN-SUFFIX,msftauth.net,DIRECT
+- DOMAIN-SUFFIX,msftauthimages.net,DIRECT
+- DOMAIN-SUFFIX,openai.com,PROXY
+- DOMAIN-SUFFIX,chatgpt.com,PROXY
+- DOMAIN-SUFFIX,anthropic.com,PROXY
+- DOMAIN-SUFFIX,claude.ai,PROXY
+- DOMAIN-SUFFIX,google.com,PROXY
+- DOMAIN-SUFFIX,googleapis.com,PROXY
+- DOMAIN-SUFFIX,googleapis.cn,PROXY
+- DOMAIN-SUFFIX,gstatic.com,PROXY
+- DOMAIN-SUFFIX,gvt1.com,PROXY
+- DOMAIN-SUFFIX,gvt2.com,PROXY
+- DOMAIN-SUFFIX,gvt3.com,PROXY
+- DOMAIN-SUFFIX,googleusercontent.com,PROXY
+- DOMAIN-SUFFIX,ggpht.com,PROXY
+- DOMAIN-SUFFIX,android.com,PROXY
+- DOMAIN-SUFFIX,android.clients.google.com,PROXY
+- DOMAIN-SUFFIX,android.googleapis.com,PROXY
+- DOMAIN-SUFFIX,dl.google.com,PROXY
+- DOMAIN-SUFFIX,dl-ssl.google.com,PROXY
+- DOMAIN-SUFFIX,play.googleapis.com,PROXY
+- DOMAIN-SUFFIX,market.android.com,PROXY
+- DOMAIN-SUFFIX,xn--ngstr-lra8j.com,PROXY
+- GEOSITE,google,PROXY
+- GEOSITE,netflix,PROXY
+- DOMAIN-SUFFIX,nflxvideo.net,PROXY
+- DOMAIN-SUFFIX,nflximg.net,PROXY
+- DOMAIN-SUFFIX,nflxso.net,PROXY
+- DOMAIN-SUFFIX,nflxext.com,PROXY
+- GEOSITE,disney,PROXY
+- DOMAIN-SUFFIX,disney-plus.net,PROXY
+- DOMAIN-SUFFIX,disneyplus.com,PROXY
+- GEOSITE,spotify,PROXY
+- DOMAIN-SUFFIX,scdn.co,PROXY
+- GEOSITE,youtube,PROXY
+- DOMAIN-SUFFIX,youtube.com,PROXY
+- DOMAIN-SUFFIX,youtu.be,PROXY
+- DOMAIN-SUFFIX,ytimg.com,PROXY
+- GEOSITE,twitter,PROXY
+- DOMAIN-SUFFIX,twimg.com,PROXY
+- DOMAIN-SUFFIX,t.co,PROXY
+- GEOSITE,facebook,PROXY
+- DOMAIN-SUFFIX,fb.me,PROXY
+- DOMAIN-SUFFIX,fbcdn.net,PROXY
+- GEOSITE,instagram,PROXY
+- GEOSITE,telegram,PROXY
+- DOMAIN-SUFFIX,t.me,PROXY
+- DOMAIN-SUFFIX,telegram.me,PROXY
+- DOMAIN-SUFFIX,tdesktop.com,PROXY
+- DOMAIN-SUFFIX,whatsapp.com,PROXY
+- DOMAIN-SUFFIX,whatsapp.net,PROXY
+- GEOSITE,discord,PROXY
+- DOMAIN-SUFFIX,discordapp.com,PROXY
+- DOMAIN-SUFFIX,discordapp.net,PROXY
+- GEOSITE,reddit,PROXY
+- DOMAIN-SUFFIX,redditmedia.com,PROXY
+- DOMAIN-SUFFIX,redd.it,PROXY
+- GEOSITE,twitch,PROXY
+- DOMAIN-SUFFIX,ttvnw.net,PROXY
+- DOMAIN-SUFFIX,jtvnw.net,PROXY
+- GEOSITE,tiktok,PROXY
+- DOMAIN-SUFFIX,tiktokcdn.com,PROXY
+- DOMAIN-SUFFIX,byteoversea.com,PROXY
+- DOMAIN-SUFFIX,wikipedia.org,PROXY
+- DOMAIN-SUFFIX,wikimedia.org,PROXY
+- DOMAIN-SUFFIX,wikimediafoundation.org,PROXY
+- DOMAIN-SUFFIX,mediawiki.org,PROXY
+- DOMAIN-SUFFIX,wiktionary.org,PROXY
+- DOMAIN-SUFFIX,wikibooks.org,PROXY
+- DOMAIN-SUFFIX,wikiquote.org,PROXY
+- DOMAIN-SUFFIX,wikisource.org,PROXY
+- DOMAIN-SUFFIX,wikinews.org,PROXY
+- DOMAIN-SUFFIX,wikiversity.org,PROXY
+- DOMAIN-SUFFIX,wikidata.org,PROXY
+- DOMAIN-SUFFIX,wikivoyage.org,PROXY
+- DOMAIN-SUFFIX,paypal.com,PROXY
+- DOMAIN-SUFFIX,paypalobjects.com,PROXY
+- GEOSITE,category-games@cn,DIRECT
+- GEOSITE,apple-cn,DIRECT
+- GEOSITE,apple,DIRECT
+- GEOSITE,microsoft@cn,DIRECT
+- GEOSITE,steam@cn,DIRECT
+- DOMAIN-SUFFIX,cn,DIRECT
+- DOMAIN-SUFFIX,娑擃厼娴?DIRECT
+- DOMAIN-SUFFIX,閸忣剙寰?DIRECT
+- DOMAIN-SUFFIX,缂冩垹绮?DIRECT
+- GEOSITE,cn,DIRECT
+- GEOSITE,geolocation-cn,DIRECT
+- GEOIP,CN,DIRECT,no-resolve
+- GEOSITE,geolocation-!cn,PROXY
+- MATCH,PROXY

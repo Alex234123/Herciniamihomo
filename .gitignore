@@ -1,0 +1,36 @@
+# =====================================================================
+# Herciniamihomo Pro - Git Ignore Rules
+# =====================================================================
+
+# 1. 核心敏感数据与用户代理隐私 (CRITICAL PRIVACY & SECURITY)
+data/profiles/
+data/profiles.json
+data/config.yaml
+data/custom_direct_rules.json
+data/cache.db
+*.log
+crash.log
+
+# 2. 本地用户个性化界面配置
+data/hercinia_glass.cfg
+
+# 3. WebView2 / Edge 运行时缓存、Cookie与临时数据
+userdata/
+userdata_v2/
+EBWebView/
+
+# 4. 二进制产物与可执行文件 (在 GitHub Releases 中发布)
+*.exe
+bin/mihomo.exe
+bin/*.dll
+bin/*.exe
+
+# 5. Geo 规则库与离线数据包 (由客户端或内核按需自动拉取)
+data/*.dat
+data/*.zip
+data/*.mmdb
+data/*.mrs
+
+# 6. 本地临时维护与测试脚本
+*.ps1
+!build.ps1

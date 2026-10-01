@@ -1,0 +1,11 @@
+[
+  {
+    "Id": "example_sub_1",
+    "Name": "示例订阅 (请通过客户端界面添加)",
+    "Url": "https://example.com/api/v1/client/subscribe?token=your_token_here",
+    "FileName": "example_sub_1.yaml",
+    "NodeCount": 0,
+    "UpdatedAt": "2026-10-01 00:00",
+    "Enabled": true
+  }
+]

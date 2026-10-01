@@ -1,0 +1,665 @@
+/* ==========================================================================
+   Herciniamihomo - Apple Liquid Glass Optical Engine v3.0 (120Hz Spring Edition)
+   Based on rdev/liquid-glass-react & Apple VisionOS / iOS 26 Design System
+   - Synchronized Sidebar-to-Content Elastic Reflow
+   - 120fps Hardware-Accelerated Liquid Glass & Spring Physics
+   - Restored & Supercharged Vue / FLIP / Route / Accordion Transitions
+   ========================================================================== */
+
+:root {
+  --lg-blur: 20px;
+  --lg-saturate: 210%;
+  --lg-brightness: 1.06;
+  --lg-surface-opacity: 0.24;
+  --lg-card-opacity: 0.18;
+  --lg-rim-intensity: 0.65;
+  --lg-shadow-strength: 0.32;
+  --app-surface-alpha: 24% !important;
+  --app-glass: blur(var(--lg-blur)) saturate(var(--lg-saturate)) !important;
+  --mouse-x: 50vw;
+  --mouse-y: 50vh;
+
+  /* Apple iOS 26 / VisionOS 标准弹簧物理曲线 */
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-bouncy: cubic-bezier(0.22, 1.35, 0.36, 1);
+  --spring-press: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* 覆写 Zashboard 折叠动画参数，使其丝滑回弹 */
+  --collapse-motion-duration: 0.38s !important;
+  --collapse-motion-ease: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  --page-transition-duration: 0.38s !important;
+  --page-transition-ease: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 1. 底层高清壁纸画布（置于 z-index: 0，支持切换时的呼吸缩放与柔光过渡） */
+#hercinia-bg-container {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 0 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-image: url('./background-DTLDDGUj.jpg');
+  will-change: transform, filter;
+  transform: scale(1) translateZ(0);
+  transition: transform 0.65s var(--spring-smooth), filter 0.55s var(--spring-smooth);
+  pointer-events: none !important;
+}
+
+#hercinia-bg-container.bg-morph-anim {
+  animation: herciniaBgMorph 0.68s var(--spring-smooth) forwards;
+}
+
+@keyframes herciniaBgMorph {
+  0% {
+    transform: scale(1.048) translateZ(0);
+    filter: brightness(1.22) saturate(1.25) blur(6px);
+  }
+  100% {
+    transform: scale(1) translateZ(0);
+    filter: brightness(1) saturate(1) blur(0px);
+  }
+}
+
+/* 壁纸上方微光动态极光折射遮罩（跟随 120Hz 阻尼弹簧鼠标坐标） */
+#hercinia-bg-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(850px circle at var(--mouse-x) var(--mouse-y), rgba(56, 189, 248, 0.15), transparent 58%),
+    linear-gradient(135deg, rgba(10, 15, 30, 0.26) 0%, rgba(15, 23, 42, 0.40) 100%);
+  pointer-events: none;
+}
+
+/* 2. 强制剥离外层全屏容器的实色底色与全屏模糊，让高清壁纸 100% 穿透 */
+html,
+body {
+  background: #090d16 !important;
+  background-color: transparent !important;
+  color-scheme: dark !important;
+}
+
+#app {
+  position: relative !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+#app-content,
+.home-page,
+.home-page > div:last-child,
+.home-page > div.relative.flex-1,
+.transparent-collapse {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ==========================================================================
+   3. 左侧边栏与右侧主工作区同步弹性收缩/展开布局引擎 (Sidebar <-> Content Sync)
+   解决侧边栏打开时覆盖右侧组件、右侧不随动收缩的问题
+   ========================================================================== */
+.home-page > div.relative.z-40.flex-none {
+  transition: width 0.42s var(--spring-smooth),
+              min-width 0.42s var(--spring-smooth),
+              flex-basis 0.42s var(--spring-smooth) !important;
+  will-change: width, flex-basis;
+}
+
+/* 当侧边栏收起 (.w-18) 时，占位槽宽度为 5.25rem (84px = 72px 侧边栏 + 12px 边距) */
+.home-page.sidebar-collapsed > div.relative.z-40.flex-none,
+.home-page > div.relative.z-40.flex-none.w-18,
+.home-page > div.relative.z-40.flex-none:has(.sidebar.w-18) {
+  width: 5.25rem !important;
+  min-width: 5.25rem !important;
+  flex-basis: 5.25rem !important;
+}
+
+/* 当侧边栏展开 (.w-64) 时，占位槽立即同步平滑扩展为 16.75rem (268px)，推动右侧组件平滑收缩 */
+.home-page.sidebar-expanded > div.relative.z-40.flex-none,
+.home-page > div.relative.z-40.flex-none.w-64,
+.home-page > div.relative.z-40.flex-none:has(.sidebar.w-64) {
+  width: 16.75rem !important;
+  min-width: 16.75rem !important;
+  flex-basis: 16.75rem !important;
+}
+
+/* 右侧主内容容器平滑自适应过渡 */
+.home-page > div.relative.flex-1 {
+  transition: width 0.42s var(--spring-smooth),
+              transform 0.42s var(--spring-smooth) !important;
+  min-width: 0 !important;
+}
+
+/* 左侧边栏本体：保留 width 与 padding 的弹簧动画，确保触发 transitionend(width) */
+.sidebar {
+  margin: 10px 0 10px 10px !important;
+  height: calc(100% - 20px) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, calc(var(--lg-surface-opacity) * 0.9)) 0%,
+    rgba(20, 28, 48, var(--lg-surface-opacity)) 50%,
+    rgba(15, 23, 42, calc(var(--lg-surface-opacity) * 1.18)) 100%
+  ) !important;
+  backdrop-filter: url(#hercinia-liquid-filter) blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  -webkit-backdrop-filter: url(#hercinia-liquid-filter) blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  border-top: 1px solid rgba(255, 255, 255, var(--lg-rim-intensity)) !important;
+  border-left: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.75)) !important;
+  border-right: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.28)) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.22)) !important;
+  box-shadow:
+    0 18px 42px -8px rgba(0, 0, 0, var(--lg-shadow-strength)),
+    0 4px 14px -2px rgba(0, 0, 0, 0.22),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.9)),
+    inset 0 -1px 2px 0 rgba(56, 189, 248, 0.15) !important;
+  transition: width 0.42s var(--spring-smooth),
+              padding 0.42s var(--spring-smooth),
+              box-shadow 0.38s var(--spring-smooth),
+              background 0.38s ease !important;
+  will-change: width, padding;
+}
+
+.sidebar > div {
+  transition: width 0.42s var(--spring-smooth),
+              padding 0.42s var(--spring-smooth) !important;
+}
+
+/* 侧边栏选中指示胶囊：Q弹液态滑动 */
+.sidebar-tab-indicator {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.58), rgba(99, 102, 241, 0.52)) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
+  border-radius: 14px !important;
+}
+
+.sidebar-tab-indicator-ready {
+  transition: transform 0.52s var(--spring-bouncy),
+              width 0.38s var(--spring-smooth),
+              height 0.38s var(--spring-smooth),
+              opacity 0.2s ease-out !important;
+}
+
+.segment-indicator-ready {
+  transition: transform 0.46s var(--spring-bouncy),
+              width 0.38s var(--spring-smooth),
+              opacity 0.2s ease-out !important;
+}
+
+/* ==========================================================================
+   4. 页面路由切换、弹窗与折叠面板丝滑过渡 (Vue Router & Collapse Spring Motion)
+   覆写 Zashboard 在 custom-background 与 reduced-motion 下被禁用的过渡动画
+   ========================================================================== */
+.page-enter-active,
+.page-leave-active,
+.custom-background :is(.page-enter-active, .page-leave-active) {
+  will-change: opacity, transform, filter !important;
+  transition: opacity 0.36s var(--spring-smooth),
+              transform 0.42s var(--spring-smooth),
+              filter 0.36s var(--spring-smooth) !important;
+}
+
+.page-enter-from,
+.custom-background .page-enter-from {
+  opacity: 0 !important;
+  transform: translateY(14px) scale(0.986) !important;
+  filter: blur(6px) !important;
+}
+
+.page-leave-to,
+.custom-background .page-leave-to {
+  opacity: 0 !important;
+  transform: translateY(-8px) scale(0.992) !important;
+  filter: blur(4px) !important;
+}
+
+/* 强制在任何 Windows 视觉设置下均保留丝滑过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-tab-indicator-ready {
+    transition: transform 0.52s var(--spring-bouncy), width 0.38s var(--spring-smooth), height 0.38s var(--spring-smooth), opacity 0.2s ease-out !important;
+  }
+  .segment-indicator-ready {
+    transition: transform 0.46s var(--spring-bouncy), width 0.38s var(--spring-smooth), opacity 0.2s ease-out !important;
+  }
+  .page-enter-active,
+  .page-leave-active {
+    transition: opacity 0.36s var(--spring-smooth), transform 0.42s var(--spring-smooth) !important;
+  }
+  .modal-enter-active .modal-box,
+  .modal-leave-active .modal-box {
+    transition: transform 0.38s var(--spring-bouncy), opacity 0.28s ease-out !important;
+  }
+  .floating-menu-enter-active,
+  .floating-menu-leave-active {
+    transition: opacity 0.22s var(--spring-smooth), transform 0.28s var(--spring-bouncy) !important;
+  }
+}
+
+/* ==========================================================================
+   5. 第一层级：主液态玻璃腔体 (Main Liquid Glass Chambers)
+   分离静态悬浮坞与动态折叠卡片，兼顾光学折射质感与 120Hz 满帧流畅度
+   ========================================================================== */
+.sticky.z-10,
+.dock,
+.modal-box,
+.floating-menu-panel,
+.dropdown-content {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, calc(var(--lg-surface-opacity) * 0.85)) 0%,
+    rgba(20, 28, 48, var(--lg-surface-opacity)) 50%,
+    rgba(15, 23, 42, calc(var(--lg-surface-opacity) * 1.15)) 100%
+  ) !important;
+  backdrop-filter: url(#hercinia-liquid-filter) blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  -webkit-backdrop-filter: url(#hercinia-liquid-filter) blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  border-radius: 22px !important;
+  border-top: 1px solid rgba(255, 255, 255, var(--lg-rim-intensity)) !important;
+  border-left: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.75)) !important;
+  border-right: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.28)) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.22)) !important;
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, var(--lg-shadow-strength)),
+    0 4px 12px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.9)),
+    inset 0 -1px 2px 0 rgba(56, 189, 248, 0.15) !important;
+}
+
+.sticky.z-10 {
+  margin: 8px 12px !important;
+  border-radius: 20px !important;
+}
+
+/* 代理组折叠卡片与概览大卡片：保留 grid-template-rows 与 height 过渡，拒绝生硬跳变 */
+.base-container,
+.proxy-group-card,
+.collapse-motion,
+.collapse:not(.transparent-collapse),
+.settings-grid,
+.bg-base-200.rounded-2xl,
+.bg-base-200.sticky,
+.table-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, calc(var(--lg-surface-opacity) * 0.85)) 0%,
+    rgba(20, 28, 48, var(--lg-surface-opacity)) 50%,
+    rgba(15, 23, 42, calc(var(--lg-surface-opacity) * 1.15)) 100%
+  ) !important;
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) !important;
+  border-radius: 22px !important;
+  border-top: 1px solid rgba(255, 255, 255, var(--lg-rim-intensity)) !important;
+  border-left: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.75)) !important;
+  border-right: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.28)) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.22)) !important;
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, var(--lg-shadow-strength)),
+    0 4px 12px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.9)),
+    inset 0 -1px 2px 0 rgba(56, 189, 248, 0.15) !important;
+  transition: grid-template-rows 0.4s var(--spring-smooth),
+              height 0.4s var(--spring-smooth),
+              transform 0.36s var(--spring-smooth),
+              box-shadow 0.36s var(--spring-smooth),
+              border-color 0.3s ease !important;
+}
+
+.collapse-motion-preview,
+.collapse-motion-content {
+  transition: opacity 0.32s var(--spring-smooth),
+              transform 0.36s var(--spring-smooth) !important;
+}
+
+/* ==========================================================================
+   6. 第二层级：所有独立代理节点卡片 (ProxyNodeCard) & 子级数据晶块
+   加入 Apple 弹簧物理曲线 (Hover 悬浮抬升 + Active 按压回弹 + 镜面流光)
+   ========================================================================== */
+div.cursor-pointer.rounded-md.bg-base-200,
+.card,
+.surface,
+.bg-base-200\/30,
+.bg-base-200\/50,
+.bg-base-200\/60,
+.rounded-box.bg-base-200\/50,
+.setting-item {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, calc(var(--lg-card-opacity) + 0.06)) 0%,
+    rgba(255, 255, 255, calc(var(--lg-card-opacity) * 0.45)) 100%
+  ) !important;
+  backdrop-filter: blur(calc(var(--lg-blur) * 0.72)) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(calc(var(--lg-blur) * 0.72)) saturate(190%) !important;
+  border-radius: 15px !important;
+  border-top: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.75)) !important;
+  border-left: 1px solid rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.55)) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    0 6px 18px -4px rgba(0, 0, 0, 0.22),
+    inset 0 1px 1px 0 rgba(255, 255, 255, calc(var(--lg-rim-intensity) * 0.7)) !important;
+  transform: translateY(0) scale(1) translateZ(0);
+  transition: transform 0.42s var(--spring-bouncy),
+              box-shadow 0.38s var(--spring-smooth),
+              background 0.32s ease,
+              border-color 0.32s ease !important;
+}
+
+/* 代理节点卡片悬浮弹性折射效果 */
+div.cursor-pointer.rounded-md.bg-base-200:hover,
+.card:hover,
+.setting-item:hover,
+.bg-base-200\/30:hover {
+  transform: translateY(-3.5px) scale(1.018) translateZ(0) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, calc(var(--lg-card-opacity) + 0.15)) 0%,
+    rgba(255, 255, 255, calc(var(--lg-card-opacity) * 0.72)) 100%
+  ) !important;
+  border-top-color: rgba(255, 255, 255, 0.92) !important;
+  border-left-color: rgba(255, 255, 255, 0.75) !important;
+  box-shadow:
+    0 14px 30px -6px rgba(0, 0, 0, 0.38),
+    0 0 18px -2px rgba(56, 189, 248, 0.28),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.92) !important;
+}
+
+/* 代理节点卡片点击阻尼下压反馈 (iOS Tactile Squash) */
+div.cursor-pointer.rounded-md.bg-base-200:active,
+div.cursor-pointer.rounded-md.bg-primary\/85:active {
+  transform: translateY(0px) scale(0.955) translateZ(0) !important;
+  transition-duration: 0.1s !important;
+}
+
+/* 7. 选中的代理节点卡片 (Active Proxy Node - Iridescent Prismatic Liquid Glass) */
+div.cursor-pointer.rounded-md.bg-primary\/85,
+.bg-primary\/85 {
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.54) 0%,
+    rgba(99, 102, 241, 0.48) 50%,
+    rgba(168, 85, 247, 0.44) 100%
+  ) !important;
+  backdrop-filter: blur(18px) saturate(230%) brightness(1.12) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(230%) brightness(1.12) !important;
+  border-radius: 15px !important;
+  border-top: 1px solid rgba(224, 242, 254, 0.95) !important;
+  border-left: 1px solid rgba(186, 230, 253, 0.82) !important;
+  border-right: 1px solid rgba(165, 180, 252, 0.42) !important;
+  border-bottom: 1px solid rgba(165, 180, 252, 0.38) !important;
+  box-shadow:
+    0 10px 26px -4px rgba(56, 189, 248, 0.45),
+    0 4px 12px -2px rgba(99, 102, 241, 0.35),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 3px 0 rgba(56, 189, 248, 0.48) !important;
+  transform: translateY(-1.5px) scale(1.005) translateZ(0) !important;
+  transition: transform 0.42s var(--spring-bouncy),
+              box-shadow 0.38s var(--spring-smooth),
+              background 0.32s ease !important;
+}
+
+div.cursor-pointer.rounded-md.bg-primary\/85:hover {
+  transform: translateY(-4px) scale(1.022) translateZ(0) !important;
+  box-shadow:
+    0 16px 34px -4px rgba(56, 189, 248, 0.62),
+    inset 0 2px 3px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* 8. 第三层级：按钮、输入框、分段控制器、延迟胶囊标签 */
+.btn {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07)) !important;
+  backdrop-filter: blur(14px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.38) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  transition: transform 0.38s var(--spring-bouncy),
+              box-shadow 0.32s var(--spring-smooth),
+              background 0.25s ease !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.65), rgba(99, 102, 241, 0.6)) !important;
+  border-color: rgba(186, 230, 253, 0.8) !important;
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35), inset 0 1px 1.5px rgba(255, 255, 255, 0.85) !important;
+}
+
+.btn:hover {
+  transform: translateY(-2px) scale(1.035) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26), inset 0 1.5px 2px rgba(255, 255, 255, 0.78) !important;
+}
+
+.btn:active {
+  transform: translateY(0px) scale(0.94) !important;
+  transition-duration: 0.08s !important;
+}
+
+.input,
+.select,
+.tabs {
+  background: rgba(15, 23, 42, 0.32) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s var(--spring-smooth), transform 0.3s var(--spring-smooth) !important;
+}
+
+.input:focus,
+.select:focus {
+  border-color: rgba(56, 189, 248, 0.85) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22), inset 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+.latency-tag,
+.badge {
+  background: rgba(15, 23, 42, 0.48) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 9999px !important;
+  padding: 1px 7px !important;
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45) !important;
+  font-weight: 600 !important;
+  transition: transform 0.32s var(--spring-bouncy), background-color 0.25s ease !important;
+}
+
+/* 文字清晰度强化 */
+.text-base-content {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================================
+   9. Herciniamihomo Liquid Glass Studio 悬浮控制台 (双向弹簧展开/收起动画)
+   ========================================================================== */
+#hercinia-dock-trigger {
+  position: fixed;
+  bottom: 18px;
+  right: 22px;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.68), rgba(15, 23, 42, 0.78));
+  backdrop-filter: url(#hercinia-liquid-filter) blur(24px) saturate(220%);
+  -webkit-backdrop-filter: url(#hercinia-liquid-filter) blur(24px) saturate(220%);
+  border-top: 1px solid rgba(255, 255, 255, 0.75);
+  border-left: 1px solid rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(56, 189, 248, 0.25), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.75);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.42s var(--spring-bouncy), box-shadow 0.35s var(--spring-smooth);
+}
+
+#hercinia-dock-trigger:hover {
+  transform: translateY(-3.5px) scale(1.045);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 28px rgba(56, 189, 248, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.9);
+}
+
+#hercinia-dock-trigger:active {
+  transform: translateY(0px) scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* 使用 opacity + visibility + 3D scale 替代 display:none，使打开和关闭都具备丝滑弹簧过渡 */
+#hercinia-studio-panel {
+  position: fixed;
+  bottom: 72px;
+  right: 22px;
+  width: 370px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  z-index: 99999;
+  padding: 18px;
+  border-radius: 26px;
+  background: linear-gradient(145deg, rgba(24, 34, 56, 0.78) 0%, rgba(12, 18, 34, 0.86) 100%);
+  backdrop-filter: url(#hercinia-liquid-filter) blur(32px) saturate(230%);
+  -webkit-backdrop-filter: url(#hercinia-liquid-filter) blur(32px) saturate(230%);
+  border-top: 1px solid rgba(255, 255, 255, 0.78);
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1.5px 2px rgba(255, 255, 255, 0.75);
+  color: #f8fafc;
+  font-family: system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform-origin: bottom right;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(22px) scale(0.91);
+  filter: blur(8px);
+  transition: opacity 0.36s var(--spring-smooth),
+              transform 0.46s var(--spring-bouncy),
+              filter 0.36s var(--spring-smooth),
+              visibility 0.36s;
+}
+
+#hercinia-studio-panel.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  filter: blur(0px);
+}
+
+.lg-studio-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.lg-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #bae6fd;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.lg-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.lg-preset-btn {
+  padding: 7px 6px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  transition: transform 0.35s var(--spring-bouncy),
+              background 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.lg-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.lg-preset-btn:active {
+  transform: scale(0.94);
+  transition-duration: 0.08s;
+}
+
+.lg-preset-btn.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.55), rgba(99, 102, 241, 0.55));
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  color: #fff;
+}
+
+.lg-upload-box {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.lg-upload-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(37, 99, 235, 0.45));
+  border: 1px solid rgba(125, 211, 252, 0.65);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  transition: transform 0.36s var(--spring-bouncy), box-shadow 0.3s ease, filter 0.25s ease;
+}
+
+.lg-upload-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.32), inset 0 1px 1.5px rgba(255, 255, 255, 0.85);
+}
+
+.lg-upload-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.08s;
+}
+
+.lg-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lg-slider-row input[type="range"] {
+  width: 100%;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
