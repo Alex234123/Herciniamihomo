@@ -97,6 +97,7 @@ Herciniamihomo/
 ├── icon_circle.png         # 512x512 高分辨率正圆形抗锯齿底图
 ├── src/
 │   ├── Program.cs          # 核心客户端源代码（纯 C# WPF 桌面架构）
+│   ├── SetupProgram.cs     # 单文件向导式 GUI 安装程序源码
 │   └── merge_engine.js     # 多订阅 YAML 合并与节点去重引擎
 └── data/
     ├── template.yaml       # 客户端配置骨架模版（已安全脱敏）

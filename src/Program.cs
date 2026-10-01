@@ -201,6 +201,109 @@ namespace Herciniamihomo
     }
 
     // =========================================================================
+    // 1.5 响应式自适应卡片网格面板 (Fluid Responsive Uniform Auto-Fitting Grid)
+    // 确保节点列表左右两侧始终与上方卡片 100% 严丝合缝平齐，右侧永不留白
+    // =========================================================================
+    public class ResponsiveCardsPanel : Panel
+    {
+        public double MinCardWidth { get; set; }
+        public double CardHeight { get; set; }
+        public double Gap { get; set; }
+
+        public ResponsiveCardsPanel()
+        {
+            this.MinCardWidth = 250.0;
+            this.CardHeight = 84.0;
+            this.Gap = 12.0;
+            this.SnapsToDevicePixels = true;
+            this.UseLayoutRounding = true;
+        }
+
+        private void GetColumnMetrics(double availWidth, out int cols, out double[] xOffsets, out double[] widths)
+        {
+            cols = Math.Max(1, (int)Math.Floor((availWidth + Gap) / (MinCardWidth + Gap)));
+            xOffsets = new double[cols];
+            widths = new double[cols];
+
+            double totalGaps = (cols - 1) * Gap;
+            double usableWidth = Math.Max(0, availWidth - totalGaps);
+            double baseWidth = Math.Floor(usableWidth / cols);
+            double remainder = usableWidth - (baseWidth * cols);
+
+            double currentX = 0;
+            for (int c = 0; c < cols; c++)
+            {
+                double w = baseWidth + (c < remainder ? 1.0 : 0.0);
+                xOffsets[c] = currentX;
+                widths[c] = w;
+                currentX += w + Gap;
+            }
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            int count = InternalChildren.Count;
+            if (count == 0) return new Size(0, 0);
+
+            double availWidth = availableSize.Width;
+            if (double.IsInfinity(availWidth) || availWidth <= 0)
+            {
+                availWidth = this.ActualWidth > 0 ? this.ActualWidth : 1000.0;
+            }
+
+            int cols;
+            double[] xOffsets, widths;
+            GetColumnMetrics(availWidth, out cols, out xOffsets, out widths);
+
+            for (int i = 0; i < count; i++)
+            {
+                UIElement child = InternalChildren[i];
+                if (child != null)
+                {
+                    int col = i % cols;
+                    child.Measure(new Size(widths[col], CardHeight));
+                }
+            }
+
+            int totalRows = (count + cols - 1) / cols;
+            double totalHeight = totalRows * CardHeight + Math.Max(0, totalRows - 1) * Gap;
+            return new Size(availWidth, totalHeight);
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            int count = InternalChildren.Count;
+            if (count == 0) return finalSize;
+
+            double availWidth = finalSize.Width;
+            if (availWidth <= 0) return finalSize;
+
+            int cols;
+            double[] xOffsets, widths;
+            GetColumnMetrics(availWidth, out cols, out xOffsets, out widths);
+
+            for (int i = 0; i < count; i++)
+            {
+                UIElement child = InternalChildren[i];
+                if (child == null) continue;
+
+                int row = i / cols;
+                int col = i % cols;
+
+                double x = xOffsets[col];
+                double y = row * (CardHeight + Gap);
+                double w = widths[col];
+
+                child.Arrange(new Rect(x, y, w, CardHeight));
+            }
+
+            int totalRows = (count + cols - 1) / cols;
+            double arrangedHeight = totalRows * CardHeight + Math.Max(0, totalRows - 1) * Gap;
+            return new Size(finalSize.Width, arrangedHeight);
+        }
+    }
+
+    // =========================================================================
     // 2. 预冻结高精度矢量图标库 (Frozen Geometries - 零内存重复分配)
     // =========================================================================
     public static class VectorIcons
@@ -388,6 +491,62 @@ namespace Herciniamihomo
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool AllowSetForegroundWindow(uint dwProcessId);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        private static IntPtr FindProcessWindow(int processId)
+        {
+            IntPtr found = IntPtr.Zero;
+            try
+            {
+                EnumWindows(delegate(IntPtr hWnd, IntPtr lParam)
+                {
+                    uint pid;
+                    GetWindowThreadProcessId(hWnd, out pid);
+                    if (pid == (uint)processId)
+                    {
+                        StringBuilder sb = new StringBuilder(256);
+                        GetWindowText(hWnd, sb, 256);
+                        string title = sb.ToString();
+                        if (title.Contains("Herciniamihomo"))
+                        {
+                            found = hWnd;
+                            return false;
+                        }
+                        StringBuilder cls = new StringBuilder(256);
+                        GetClassName(hWnd, cls, 256);
+                        if (cls.ToString().StartsWith("HwndWrapper"))
+                        {
+                            found = hWnd;
+                        }
+                    }
+                    return true;
+                }, IntPtr.Zero);
+            }
+            catch { }
+            return found;
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -396,10 +555,61 @@ namespace Herciniamihomo
             {
                 if (!createdNew)
                 {
-                    // 单实例已存在：广播自定义唤醒指令，瞬间激活前置已有窗口，免除侵入式弹窗干扰
                     uint wakeMsg = RegisterWindowMessage("HERCINIAMIHOMO_WAKE_UP_MSG");
+
+                    Process current = Process.GetCurrentProcess();
+                    Process[] procs = Process.GetProcessesByName(current.ProcessName);
+                    Process existing = null;
+                    foreach (var p in procs)
+                    {
+                        if (p.Id != current.Id) { existing = p; break; }
+                    }
+
+                    bool restored = false;
+                    if (existing != null)
+                    {
+                        try { AllowSetForegroundWindow((uint)existing.Id); } catch { }
+                        IntPtr hwnd = existing.MainWindowHandle;
+                        if (hwnd == IntPtr.Zero)
+                        {
+                            hwnd = FindProcessWindow(existing.Id);
+                        }
+
+                        if (hwnd != IntPtr.Zero)
+                        {
+                            ShowWindowAsync(hwnd, 9 /* SW_RESTORE */);
+                            SetForegroundWindow(hwnd);
+                            PostMessage(hwnd, wakeMsg, IntPtr.Zero, IntPtr.Zero);
+                            restored = true;
+                        }
+                    }
+
                     PostMessage((IntPtr)0xffff, wakeMsg, IntPtr.Zero, IntPtr.Zero);
-                    return;
+
+                    if (!restored && existing != null)
+                    {
+                        try
+                        {
+                            Thread.Sleep(300);
+                            existing.Refresh();
+                            IntPtr checkHwnd = existing.MainWindowHandle;
+                            if (checkHwnd == IntPtr.Zero) checkHwnd = FindProcessWindow(existing.Id);
+                            if (checkHwnd != IntPtr.Zero)
+                            {
+                                ShowWindowAsync(checkHwnd, 9);
+                                SetForegroundWindow(checkHwnd);
+                                return;
+                            }
+                            // 原进程为无窗口无响应幽灵后台，强制清理并由当前进程接管启动
+                            existing.Kill();
+                            existing.WaitForExit(1000);
+                        }
+                        catch { }
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
 
                 try
@@ -617,17 +827,19 @@ namespace Herciniamihomo
 
         // 代理页与连接页引用
         private WrapPanel _groupSelectorWrap;
-        private WrapPanel _nodesGridWrap;
+        private ResponsiveCardsPanel _nodesGridWrap;
         private TextBlock _proxyGroupSummaryText;
         private StackPanel _connectionsListStack;
 
         // 实时节点延迟测速进度条与卡片热更新引用
         private class NodeCardLiveRef
         {
+            public Border CardBorder;
             public Border AccentStrip;
             public Border DelayBadge;
             public Ellipse DelayDot;
             public TextBlock DelayText;
+            public Border CheckCircle;
             public bool IsSelected;
         }
         private Dictionary<string, NodeCardLiveRef> _nodeLiveRefs = new Dictionary<string, NodeCardLiveRef>();
@@ -662,6 +874,7 @@ namespace Herciniamihomo
         private const int NodeBatchSize = 60;
         private Border _loadMoreNodesBanner;
         private TextBlock _loadMoreNodesText;
+        private Border _loadMoreHost;
 
         // 全双工 WebSocket 实时流量监控流 (Option D: ws://127.0.0.1:9097/traffic)
         private CancellationTokenSource _wsTrafficCts;
@@ -699,6 +912,7 @@ namespace Herciniamihomo
 
         private static readonly FontFamily PrimaryFont = new FontFamily("Segoe UI Variable Display, HarmonyOS Sans SC, MiSans, PingFang SC, Microsoft YaHei UI");
         private static readonly FontFamily MonoFont = new FontFamily("JetBrains Mono, Cascadia Mono, Consolas, Microsoft YaHei UI");
+        private static readonly FontFamily EmojiFont = new FontFamily("Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji, Microsoft YaHei UI, Segoe UI");
 
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT
@@ -742,6 +956,13 @@ namespace Herciniamihomo
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint RegisterWindowMessage(string lpString);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
+        private const uint MSGFLT_ADD = 1;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool ChangeWindowMessageFilterEx(IntPtr hWnd, uint message, uint action, IntPtr pChangeFilterStruct);
+
         [DllImport("wininet.dll")]
         public static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int dwBufferLength);
         public const int INTERNET_OPTION_SETTINGS_CHANGED = 39;
@@ -754,7 +975,10 @@ namespace Herciniamihomo
         {
             base.OnSourceInitialized(e);
             _wakeUpMsg = RegisterWindowMessage("HERCINIAMIHOMO_WAKE_UP_MSG");
-            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            try { ChangeWindowMessageFilter(_wakeUpMsg, MSGFLT_ADD); } catch { }
+            IntPtr handle = new WindowInteropHelper(this).Handle;
+            try { ChangeWindowMessageFilterEx(handle, _wakeUpMsg, MSGFLT_ADD, IntPtr.Zero); } catch { }
+            HwndSource source = HwndSource.FromHwnd(handle);
             if (source != null)
             {
                 source.AddHook(HwndHook);
@@ -769,6 +993,8 @@ namespace Herciniamihomo
                 if (this.WindowState == WindowState.Minimized) this.WindowState = WindowState.Normal;
                 this.Activate();
                 this.Focus();
+                this.Topmost = true;
+                this.Topmost = false;
                 handled = true;
                 return IntPtr.Zero;
             }
@@ -2550,8 +2776,13 @@ namespace Herciniamihomo
             _latencyProgressCard.Child = progStack;
             stack.Children.Add(_latencyProgressCard);
 
-            _nodesGridWrap = new WrapPanel { Orientation = Orientation.Horizontal };
+            _loadMoreNodesBanner = null;
+            _loadMoreNodesText = null;
+            _nodesGridWrap = new ResponsiveCardsPanel { Margin = new Thickness(0, 0, 0, 12) };
             stack.Children.Add(_nodesGridWrap);
+
+            _loadMoreHost = new Border { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, 0, 16) };
+            stack.Children.Add(_loadMoreHost);
 
             PopulateProxyGroupsBar();
             PopulateProxyNodesWrap();
@@ -2642,6 +2873,11 @@ namespace Herciniamihomo
             if (_nodesGridWrap == null) return;
             _nodesGridWrap.Children.Clear();
             _nodeLiveRefs.Clear();
+            if (_loadMoreHost != null)
+            {
+                _loadMoreHost.Child = null;
+                _loadMoreHost.Visibility = Visibility.Collapsed;
+            }
 
             var grp = _proxyGroups.FirstOrDefault(g => g.Name == _selectedGroupName);
             if (grp == null || grp.All == null) return;
@@ -2675,6 +2911,34 @@ namespace Herciniamihomo
 
             _currentFilteredNodeNames = nodeNames.ToList();
             _renderedNodeCount = 0;
+
+            if (_currentFilteredNodeNames.Count == 0)
+            {
+                if (_loadMoreHost != null)
+                {
+                    Border emptyCard = CreateGlassCard(12);
+                    emptyCard.Padding = new Thickness(24, 28, 24, 28);
+                    emptyCard.Margin = new Thickness(0, 8, 0, 16);
+                    StackPanel ep = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+                    ep.Children.Add(VectorIcons.Create(VectorIcons.Search, FrozenBrush(100, 148, 163, 184), 28));
+                    ep.Children.Add(new TextBlock
+                    {
+                        Text = !string.IsNullOrEmpty(_nodeSearchKeyword)
+                            ? string.Format("未搜索到匹配 \"{0}\" 的节点", _nodeSearchKeyword)
+                            : "当前策略组下无可用的代理节点",
+                        Foreground = FrozenBrush(148, 163, 184),
+                        FontSize = 13,
+                        FontWeight = FontWeights.Medium,
+                        Margin = new Thickness(0, 10, 0, 0),
+                        HorizontalAlignment = HorizontalAlignment.Center
+                    });
+                    emptyCard.Child = ep;
+                    _loadMoreHost.Child = emptyCard;
+                    _loadMoreHost.Visibility = Visibility.Visible;
+                }
+                return;
+            }
+
             AppendNextNodeBatch(NodeBatchSize);
         }
 
@@ -2684,11 +2948,6 @@ namespace Herciniamihomo
 
             var grp = _proxyGroups.FirstOrDefault(g => g.Name == _selectedGroupName);
             if (grp == null) return;
-
-            if (_loadMoreNodesBanner != null && _nodesGridWrap.Children.Contains(_loadMoreNodesBanner))
-            {
-                _nodesGridWrap.Children.Remove(_loadMoreNodesBanner);
-            }
 
             int toRender = Math.Min(count, _currentFilteredNodeNames.Count - _renderedNodeCount);
             for (int i = 0; i < toRender; i++)
@@ -2716,7 +2975,19 @@ namespace Herciniamihomo
                     _loadMoreNodesText.Text = string.Format("已渲染 {0} / {1} 个节点 · 向下滚动自动加载更多 (或点击立即全部加载剩余 {2} 个节点)",
                         _renderedNodeCount, _currentFilteredNodeNames.Count, remaining);
                 }
-                _nodesGridWrap.Children.Add(_loadMoreNodesBanner);
+                if (_loadMoreHost != null)
+                {
+                    _loadMoreHost.Child = _loadMoreNodesBanner;
+                    _loadMoreHost.Visibility = Visibility.Visible;
+                }
+            }
+            else
+            {
+                if (_loadMoreHost != null)
+                {
+                    _loadMoreHost.Child = null;
+                    _loadMoreHost.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
@@ -2724,7 +2995,7 @@ namespace Herciniamihomo
         {
             Border b = CreateGlassCard(10);
             b.Padding = new Thickness(18, 12, 18, 12);
-            b.Margin = new Thickness(0, 10, 0, 16);
+            b.Margin = new Thickness(0);
             b.Cursor = Cursors.Hand;
             b.Background = FrozenBrush(80, 15, 23, 42);
             b.BorderBrush = FrozenBrush(90, 56, 189, 248);
@@ -2823,15 +3094,245 @@ namespace Herciniamihomo
             }
         }
 
-        // 节点卡片：移除 DropShadowEffect 离屏纹理开销，采用 CornerRadius(11) 标准圆角与 CornerRadius(5) 几何延迟标签
+        public static string FixMojibake(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            if (input.Contains("馃") || input.Contains("棣") || input.Contains("缇") || input.Contains("鏃") || input.Contains("鏂") || input.Contains("寰"))
+            {
+                try
+                {
+                    Encoding gbk = Encoding.GetEncoding(936);
+                    byte[] bytes = gbk.GetBytes(input);
+                    string recovered = Encoding.UTF8.GetString(bytes);
+                    if (!string.IsNullOrEmpty(recovered) && !recovered.Contains("\uFFFD"))
+                    {
+                        return recovered;
+                    }
+                }
+                catch { }
+            }
+            return input;
+        }
+
+        private static void DetectNodeRegionInfo(string name, string type, out string regionKey, out string flagEmoji, out Color tint, out Color border)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                regionKey = "PROXY";
+                flagEmoji = "🌐";
+                tint = Color.FromArgb(40, 148, 163, 184);
+                border = Color.FromArgb(70, 148, 163, 184);
+                return;
+            }
+
+            string cleanName = FixMojibake(name);
+            string lower = cleanName.ToLowerInvariant();
+
+            if (lower == "direct" || lower == "直连")
+            {
+                regionKey = "DIRECT";
+                flagEmoji = "⚡";
+                tint = Color.FromArgb(50, 16, 185, 129);
+                border = Color.FromArgb(90, 52, 211, 153);
+                return;
+            }
+            if (lower.Contains("auto") || lower.Contains("自动") || lower.Contains("url-test") || lower.Contains("fallback"))
+            {
+                regionKey = "AUTO";
+                flagEmoji = "🔄";
+                tint = Color.FromArgb(50, 56, 189, 248);
+                border = Color.FromArgb(90, 125, 211, 252);
+                return;
+            }
+
+            // 1. 常见国家与地区 Flags / 标识映射
+            if (cleanName.Contains("🇭🇰") || lower.Contains("hk") || lower.Contains("hong kong") || lower.Contains("hkg") || cleanName.Contains("香港"))
+            {
+                regionKey = "HK";
+                flagEmoji = "🇭🇰";
+                tint = Color.FromArgb(45, 239, 68, 68);
+                border = Color.FromArgb(85, 248, 113, 113);
+                return;
+            }
+            if (cleanName.Contains("🇯🇵") || lower.Contains("jp") || lower.Contains("japan") || lower.Contains("jpn") || cleanName.Contains("日本") || cleanName.Contains("东京") || cleanName.Contains("大阪"))
+            {
+                regionKey = "JP";
+                flagEmoji = "🇯🇵";
+                tint = Color.FromArgb(45, 244, 63, 94);
+                border = Color.FromArgb(85, 251, 113, 133);
+                return;
+            }
+            if (cleanName.Contains("🇺🇸") || lower.Contains("us") || lower.Contains("usa") || lower.Contains("united states") || lower.Contains("america") || cleanName.Contains("美国") || cleanName.Contains("洛杉矶") || cleanName.Contains("圣何塞"))
+            {
+                regionKey = "US";
+                flagEmoji = "🇺🇸";
+                tint = Color.FromArgb(45, 37, 99, 235);
+                border = Color.FromArgb(85, 96, 165, 250);
+                return;
+            }
+            if (cleanName.Contains("🇸🇬") || lower.Contains("sg") || lower.Contains("sgp") || lower.Contains("singapore") || cleanName.Contains("新加坡") || cleanName.Contains("狮城"))
+            {
+                regionKey = "SG";
+                flagEmoji = "🇸🇬";
+                tint = Color.FromArgb(45, 220, 38, 38);
+                border = Color.FromArgb(85, 248, 113, 113);
+                return;
+            }
+            if (cleanName.Contains("🇹🇼") || lower.Contains("tw") || lower.Contains("twn") || lower.Contains("taiwan") || cleanName.Contains("台湾") || cleanName.Contains("台北"))
+            {
+                regionKey = "TW";
+                flagEmoji = "🇹🇼";
+                tint = Color.FromArgb(45, 99, 102, 241);
+                border = Color.FromArgb(85, 165, 180, 252);
+                return;
+            }
+            if (cleanName.Contains("🇰🇷") || lower.Contains("kr") || lower.Contains("kor") || lower.Contains("korea") || cleanName.Contains("韩国") || cleanName.Contains("首尔"))
+            {
+                regionKey = "KR";
+                flagEmoji = "🇰🇷";
+                tint = Color.FromArgb(45, 6, 182, 212);
+                border = Color.FromArgb(85, 103, 232, 249);
+                return;
+            }
+            if (cleanName.Contains("🇩🇪") || lower.Contains("de") || lower.Contains("germany") || lower.Contains("deu") || cleanName.Contains("德国") || cleanName.Contains("法兰克福"))
+            {
+                regionKey = "DE";
+                flagEmoji = "🇩🇪";
+                tint = Color.FromArgb(45, 245, 158, 11);
+                border = Color.FromArgb(85, 252, 211, 77);
+                return;
+            }
+            if (cleanName.Contains("🇬🇧") || lower.Contains("uk") || lower.Contains("gbr") || lower.Contains("britain") || cleanName.Contains("英国") || cleanName.Contains("伦敦"))
+            {
+                regionKey = "GB";
+                flagEmoji = "🇬🇧";
+                tint = Color.FromArgb(45, 30, 64, 175);
+                border = Color.FromArgb(85, 96, 165, 250);
+                return;
+            }
+            if (cleanName.Contains("🇫🇷") || lower.Contains("fr") || lower.Contains("fra") || lower.Contains("france") || cleanName.Contains("法国") || cleanName.Contains("巴黎"))
+            {
+                regionKey = "FR";
+                flagEmoji = "🇫🇷";
+                tint = Color.FromArgb(45, 59, 130, 246);
+                border = Color.FromArgb(85, 147, 197, 253);
+                return;
+            }
+            if (cleanName.Contains("🇨🇦") || lower.Contains("ca") || lower.Contains("can") || lower.Contains("canada") || cleanName.Contains("加拿大"))
+            {
+                regionKey = "CA";
+                flagEmoji = "🇨🇦";
+                tint = Color.FromArgb(45, 225, 29, 72);
+                border = Color.FromArgb(85, 251, 113, 133);
+                return;
+            }
+            if (cleanName.Contains("🇦🇺") || lower.Contains("au") || lower.Contains("aus") || lower.Contains("australia") || cleanName.Contains("澳大利亚") || cleanName.Contains("澳洲") || cleanName.Contains("悉尼"))
+            {
+                regionKey = "AU";
+                flagEmoji = "🇦🇺";
+                tint = Color.FromArgb(45, 14, 165, 233);
+                border = Color.FromArgb(85, 125, 211, 252);
+                return;
+            }
+            if (cleanName.Contains("🇲🇾") || lower.Contains("my") || lower.Contains("mys") || lower.Contains("malaysia") || cleanName.Contains("马来西亚"))
+            {
+                regionKey = "MY";
+                flagEmoji = "🇲🇾";
+                tint = Color.FromArgb(45, 234, 179, 8);
+                border = Color.FromArgb(85, 253, 224, 71);
+                return;
+            }
+            if (cleanName.Contains("🇳🇱") || lower.Contains("nl") || lower.Contains("nld") || lower.Contains("netherlands") || cleanName.Contains("荷兰") || cleanName.Contains("阿姆斯特丹"))
+            {
+                regionKey = "NL";
+                flagEmoji = "🇳🇱";
+                tint = Color.FromArgb(45, 249, 115, 22);
+                border = Color.FromArgb(85, 253, 186, 116);
+                return;
+            }
+            if (cleanName.Contains("🇷🇺") || lower.Contains("ru") || lower.Contains("rus") || lower.Contains("russia") || cleanName.Contains("俄罗斯") || cleanName.Contains("莫斯科"))
+            {
+                regionKey = "RU";
+                flagEmoji = "🇷🇺";
+                tint = Color.FromArgb(45, 99, 102, 241);
+                border = Color.FromArgb(85, 165, 180, 252);
+                return;
+            }
+
+            regionKey = "NODE";
+            flagEmoji = "🌐";
+            tint = Color.FromArgb(35, 148, 163, 184);
+            border = Color.FromArgb(65, 148, 163, 184);
+        }
+
+        private static Border CreateNodeRegionIcon(string nodeName, string nodeType)
+        {
+            string regionKey;
+            string flagEmoji;
+            Color regionTint;
+            Color regionBorder;
+
+            DetectNodeRegionInfo(nodeName, nodeType, out regionKey, out flagEmoji, out regionTint, out regionBorder);
+
+            Border badge = new Border
+            {
+                Width = 22,
+                Height = 22,
+                CornerRadius = new CornerRadius(5),
+                Background = FrozenBrush(regionTint.A, regionTint.R, regionTint.G, regionTint.B),
+                BorderBrush = FrozenBrush(regionBorder.A, regionBorder.R, regionBorder.G, regionBorder.B),
+                BorderThickness = new Thickness(0.8),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 7, 0),
+                ToolTip = "节点区域: " + regionKey
+            };
+
+            if (regionKey == "DIRECT")
+            {
+                badge.Child = VectorIcons.Create(VectorIcons.Bolt, FrozenBrush(52, 211, 153), 11);
+            }
+            else if (regionKey == "AUTO")
+            {
+                badge.Child = VectorIcons.Create(VectorIcons.Proxies, FrozenBrush(56, 189, 248), 11);
+            }
+            else if (!string.IsNullOrEmpty(flagEmoji))
+            {
+                badge.Child = new TextBlock
+                {
+                    Text = flagEmoji,
+                    FontFamily = EmojiFont,
+                    FontSize = 12.5,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextAlignment = TextAlignment.Center,
+                    Margin = new Thickness(0, -1, 0, 0)
+                };
+            }
+            else
+            {
+                badge.Child = new TextBlock
+                {
+                    Text = regionKey.Length <= 2 ? regionKey : regionKey.Substring(0, 2),
+                    FontFamily = MonoFont,
+                    FontSize = 9.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = FrozenBrush(226, 232, 240),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+            }
+
+            return badge;
+        }
+
+        // 节点卡片：采用 CornerRadius(11) 标准圆角与几何延迟标签，由 ResponsiveCardsPanel 动态自适应等宽排布
         private Border CreateRefinedProxyNodeCard(string groupName, string nodeName, string nodeType, int delay, bool isSelected)
         {
             Border card = new Border
             {
-                Width = 278,
                 Height = 84,
                 CornerRadius = new CornerRadius(11),
-                Margin = new Thickness(0, 0, 12, 12),
+                Margin = new Thickness(0),
                 Padding = new Thickness(0),
                 Cursor = Cursors.Hand,
                 ClipToBounds = true,
@@ -2878,19 +3379,33 @@ namespace Herciniamihomo
             topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            // 左侧：区域旗帜/图标徽标 + 节点名称（支持 EmojiFont 完整彩色渲染）
+            Grid leftTop = new Grid();
+            leftTop.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            leftTop.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            Border regionBadge = CreateNodeRegionIcon(nodeName, nodeType);
+            Grid.SetColumn(regionBadge, 0);
+            leftTop.Children.Add(regionBadge);
+
+            string displayName = FixMojibake(nodeName);
             TextBlock nameTb = new TextBlock
             {
-                Text = nodeName,
+                Text = displayName,
                 Foreground = isSelected ? Brushes.White : FrozenBrush(241, 245, 249),
                 FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold,
-                FontSize = 12.5,
+                FontFamily = EmojiFont,
+                FontSize = 12.2,
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0),
-                ToolTip = nodeName
+                ToolTip = displayName
             };
-            Grid.SetColumn(nameTb, 0);
-            topRow.Children.Add(nameTb);
+            Grid.SetColumn(nameTb, 1);
+            leftTop.Children.Add(nameTb);
+
+            Grid.SetColumn(leftTop, 0);
+            topRow.Children.Add(leftTop);
 
             // 右上角：来源订阅名称胶囊标签 + 选中勾选圈
             StackPanel rightTop = new StackPanel
@@ -2925,22 +3440,20 @@ namespace Herciniamihomo
                 rightTop.Children.Add(sourceBadge);
             }
 
-            if (isSelected)
+            Border checkCircle = new Border
             {
-                Border checkCircle = new Border
-                {
-                    Width = 16,
-                    Height = 16,
-                    CornerRadius = new CornerRadius(8),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Background = FrozenBrush(220, 16, 185, 129),
-                    BorderBrush = FrozenBrush(180, 110, 231, 183),
-                    BorderThickness = new Thickness(1),
-                    Margin = new Thickness(6, 0, 0, 0),
-                    Child = VectorIcons.Create(VectorIcons.Check, Brushes.White, 9.5)
-                };
-                rightTop.Children.Add(checkCircle);
-            }
+                Width = 16,
+                Height = 16,
+                CornerRadius = new CornerRadius(8),
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = FrozenBrush(220, 16, 185, 129),
+                BorderBrush = FrozenBrush(180, 110, 231, 183),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(6, 0, 0, 0),
+                Visibility = isSelected ? Visibility.Visible : Visibility.Collapsed,
+                Child = VectorIcons.Create(VectorIcons.Check, Brushes.White, 9.5)
+            };
+            rightTop.Children.Add(checkCircle);
 
             Grid.SetColumn(rightTop, 1);
             topRow.Children.Add(rightTop);
@@ -3007,10 +3520,12 @@ namespace Herciniamihomo
 
             var liveRef = new NodeCardLiveRef
             {
+                CardBorder = card,
                 AccentStrip = accentStrip,
                 DelayBadge = delayBadge,
                 DelayDot = delayDot,
                 DelayText = delayText,
+                CheckCircle = checkCircle,
                 IsSelected = isSelected
             };
             _nodeLiveRefs[nodeName] = liveRef;
@@ -4278,6 +4793,7 @@ namespace Herciniamihomo
 
             el.MouseEnter += (s, e) =>
             {
+                Panel.SetZIndex(el, 50);
                 tt.BeginAnimation(TranslateTransform.YProperty, _hoverLiftAnim);
                 st.BeginAnimation(ScaleTransform.ScaleXProperty, _hoverScaleUpAnim);
                 st.BeginAnimation(ScaleTransform.ScaleYProperty, _hoverScaleUpAnim);
@@ -4285,6 +4801,7 @@ namespace Herciniamihomo
 
             el.MouseLeave += (s, e) =>
             {
+                Panel.SetZIndex(el, 0);
                 tt.BeginAnimation(TranslateTransform.YProperty, _hoverRestAnim);
                 st.BeginAnimation(ScaleTransform.ScaleXProperty, _hoverScaleRestAnim);
                 st.BeginAnimation(ScaleTransform.ScaleYProperty, _hoverScaleRestAnim);
@@ -4976,7 +5493,7 @@ namespace Herciniamihomo
             catch { }
         }
 
-        private async Task FetchProxiesFromCoreAsync()
+        private async Task FetchProxiesFromCoreAsync(bool fullRebuild = true)
         {
             try
             {
@@ -4989,17 +5506,17 @@ namespace Herciniamihomo
                 var proxiesMap = root["proxies"] as Dictionary<string, object>;
                 if (proxiesMap == null) return;
 
-                _proxyGroups.Clear();
-                _proxyNodes.Clear();
+                List<ProxyGroupItem> newGroups = new List<ProxyGroupItem>();
+                bool structureChanged = false;
 
                 foreach (var kv in proxiesMap)
                 {
                     var pObj = kv.Value as Dictionary<string, object>;
                     if (pObj == null) continue;
 
-                    string name = kv.Key;
+                    string name = FixMojibake(kv.Key);
                     string type = pObj.ContainsKey("type") ? Convert.ToString(pObj["type"]) : "";
-                    string now = pObj.ContainsKey("now") ? Convert.ToString(pObj["now"]) : "";
+                    string now = pObj.ContainsKey("now") ? FixMojibake(Convert.ToString(pObj["now"])) : "";
 
                     int lastDelay = 0;
                     if (pObj.ContainsKey("history") && pObj["history"] is System.Collections.ArrayList)
@@ -5017,14 +5534,21 @@ namespace Herciniamihomo
 
                     _proxyNodes[name] = new ProxyNodeInfo { Name = name, Type = type, Delay = lastDelay };
 
+                    // 原地更新已渲染卡片的延迟，不重绘卡片
+                    NodeCardLiveRef liveRef;
+                    if (_nodeLiveRefs.TryGetValue(name, out liveRef))
+                    {
+                        ApplyNodeCardDelayVisual(liveRef, lastDelay, false);
+                    }
+
                     if (pObj.ContainsKey("all") && pObj["all"] is System.Collections.ArrayList)
                     {
                         if (name == "GLOBAL" && _currentMode != "global") continue;
                         var allArr = (System.Collections.ArrayList)pObj["all"];
                         List<string> allNames = new List<string>();
-                        foreach (var item in allArr) allNames.Add(Convert.ToString(item));
+                        foreach (var item in allArr) allNames.Add(FixMojibake(Convert.ToString(item)));
 
-                        _proxyGroups.Add(new ProxyGroupItem
+                        newGroups.Add(new ProxyGroupItem
                         {
                             Name = name,
                             Type = type,
@@ -5034,10 +5558,61 @@ namespace Herciniamihomo
                     }
                 }
 
+                if (_proxyGroups.Count != newGroups.Count)
+                {
+                    structureChanged = true;
+                }
+                else
+                {
+                    for (int i = 0; i < newGroups.Count; i++)
+                    {
+                        if (_proxyGroups[i].Name != newGroups[i].Name || _proxyGroups[i].All.Count != newGroups[i].All.Count)
+                        {
+                            structureChanged = true;
+                            break;
+                        }
+                    }
+                }
+
+                _proxyGroups.Clear();
+                _proxyGroups.AddRange(newGroups);
+
                 if (_activePage == "proxies" && !_isTestingLatency)
                 {
-                    PopulateProxyGroupsBar();
-                    PopulateProxyNodesWrap();
+                    if (fullRebuild && structureChanged)
+                    {
+                        PopulateProxyGroupsBar();
+                        PopulateProxyNodesWrap();
+                    }
+                    else
+                    {
+                        // 原地同步勾选圈与高亮状态，不重置 DOM 与滚动条，杜绝图标消失
+                        var curGrp = _proxyGroups.FirstOrDefault(g => g.Name == _selectedGroupName);
+                        if (curGrp != null)
+                        {
+                            foreach (var kv in _nodeLiveRefs)
+                            {
+                                bool isCur = (kv.Key == curGrp.Now);
+                                if (kv.Value.IsSelected != isCur)
+                                {
+                                    kv.Value.IsSelected = isCur;
+                                    if (kv.Value.CheckCircle != null)
+                                    {
+                                        kv.Value.CheckCircle.Visibility = isCur ? Visibility.Visible : Visibility.Collapsed;
+                                    }
+                                    if (kv.Value.CardBorder != null)
+                                    {
+                                        kv.Value.CardBorder.Background = isCur ? _cachedActiveCardBrush : _cachedCardBrush;
+                                        kv.Value.CardBorder.BorderBrush = isCur ? _cachedActiveBorderBrush : _cachedCardRimBrush;
+                                    }
+                                    if (kv.Value.AccentStrip != null)
+                                    {
+                                        kv.Value.AccentStrip.Background = isCur ? FrozenBrush(224, 242, 254) : FrozenBrush(70, 148, 163, 184);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch { }
@@ -5048,14 +5623,51 @@ namespace Herciniamihomo
             try
             {
                 var grp = _proxyGroups.FirstOrDefault(g => g.Name == groupName);
+                string oldNode = (grp != null) ? grp.Now : "";
                 if (grp != null) grp.Now = nodeName;
-                PopulateProxyNodesWrap();
+
+                // 立即原地更新卡片选中勾选圈与边框高亮，绝对不销毁 DOM，保持滚动位置不丢失，杜绝图标消失
+                if (!string.IsNullOrEmpty(oldNode))
+                {
+                    NodeCardLiveRef oldRef;
+                    if (_nodeLiveRefs.TryGetValue(oldNode, out oldRef))
+                    {
+                        oldRef.IsSelected = false;
+                        if (oldRef.CheckCircle != null) oldRef.CheckCircle.Visibility = Visibility.Collapsed;
+                        if (oldRef.CardBorder != null)
+                        {
+                            oldRef.CardBorder.Background = _cachedCardBrush;
+                            oldRef.CardBorder.BorderBrush = _cachedCardRimBrush;
+                        }
+                        if (oldRef.AccentStrip != null)
+                        {
+                            oldRef.AccentStrip.Background = FrozenBrush(70, 148, 163, 184);
+                        }
+                    }
+                }
+
+                NodeCardLiveRef newRef;
+                if (_nodeLiveRefs.TryGetValue(nodeName, out newRef))
+                {
+                    newRef.IsSelected = true;
+                    if (newRef.CheckCircle != null) newRef.CheckCircle.Visibility = Visibility.Visible;
+                    if (newRef.CardBorder != null)
+                    {
+                        newRef.CardBorder.Background = _cachedActiveCardBrush;
+                        newRef.CardBorder.BorderBrush = _cachedActiveBorderBrush;
+                    }
+                    if (newRef.AccentStrip != null)
+                    {
+                        newRef.AccentStrip.Background = FrozenBrush(224, 242, 254);
+                    }
+                }
+
                 if (_dashActiveNodeText != null) _dashActiveNodeText.Text = "当前主策略线路: " + GetPrimarySelectedNode();
 
                 string url = "http://127.0.0.1:9097/proxies/" + Uri.EscapeDataString(groupName);
                 string body = "{\"name\":\"" + nodeName.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"}";
                 await HttpSendAsync("PUT", url, body);
-                await FetchProxiesFromCoreAsync();
+                await FetchProxiesFromCoreAsync(false);
             }
             catch { }
         }
@@ -5459,7 +6071,7 @@ namespace Herciniamihomo
             List<ParsedProxyNode> result = new List<ParsedProxyNode>();
             if (string.IsNullOrEmpty(yamlText)) return result;
 
-            string text = yamlText.Trim();
+            string text = FixMojibake(yamlText.Trim());
             if (!text.Contains("proxies:") && !text.Contains("proxy-groups:") && text.Length > 20)
             {
                 try
@@ -5471,7 +6083,7 @@ namespace Herciniamihomo
                     string decoded = Encoding.UTF8.GetString(b64Bytes);
                     if (decoded.Contains("proxies:") || decoded.Contains("name:") || decoded.Contains("server:") || decoded.Contains("://"))
                     {
-                        text = decoded;
+                        text = FixMojibake(decoded);
                     }
                 }
                 catch { }
@@ -5493,10 +6105,10 @@ namespace Herciniamihomo
             {
                 if (curBlock.Count == 0) return;
                 string blockStr = string.Join("\r\n", curBlock);
-                Match nm = Regex.Match(blockStr, @"name:\s*[""']?([^""'\r\n,}]+)[""']?");
+                Match nm = Regex.Match(blockStr, @"(?<![a-zA-Z0-9_-])name:\s*[""']?([^""'\r\n,}]+)[""']?");
                 if (nm.Success)
                 {
-                    string nodeName = nm.Groups[1].Value.Trim();
+                    string nodeName = FixMojibake(nm.Groups[1].Value.Trim());
                     if (!string.IsNullOrEmpty(nodeName))
                     {
                         result.Add(new ParsedProxyNode { Name = nodeName, RawBlock = blockStr });
@@ -5541,10 +6153,14 @@ namespace Herciniamihomo
                     string trimmed = rawLine.Trim();
                     if (trimmed.StartsWith("- {") || trimmed.StartsWith("-{"))
                     {
-                        Match nm = Regex.Match(trimmed, @"name:\s*[""']?([^""'\r\n,}]+)[""']?");
+                        Match nm = Regex.Match(trimmed, @"(?<![a-zA-Z0-9_-])name:\s*[""']?([^""'\r\n,}]+)[""']?");
                         if (nm.Success)
                         {
-                            result.Add(new ParsedProxyNode { Name = nm.Groups[1].Value.Trim(), RawBlock = trimmed });
+                            string nodeName = FixMojibake(nm.Groups[1].Value.Trim());
+                            if (!string.IsNullOrEmpty(nodeName))
+                            {
+                                result.Add(new ParsedProxyNode { Name = nodeName, RawBlock = trimmed });
+                            }
                         }
                     }
                 }
@@ -5590,7 +6206,7 @@ namespace Herciniamihomo
                     }
                     if (!File.Exists(_templateYamlPath)) return 0;
 
-                    string templateText = File.ReadAllText(_templateYamlPath, Encoding.UTF8);
+                    string templateText = FixMojibake(File.ReadAllText(_templateYamlPath, Encoding.UTF8));
 
                     // 1. 提取所有已启用订阅的代理节点并按名称去重
                     HashSet<string> seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -5602,7 +6218,7 @@ namespace Herciniamihomo
                     {
                         string pPath = System.IO.Path.Combine(_profilesDir, p.FileName);
                         if (!File.Exists(pPath)) continue;
-                        string yText = File.ReadAllText(pPath, Encoding.UTF8);
+                        string yText = FixMojibake(File.ReadAllText(pPath, Encoding.UTF8));
                         var pNodes = ExtractProxyNodesFromYaml(yText);
                         foreach (var n in pNodes)
                         {
@@ -5612,7 +6228,7 @@ namespace Herciniamihomo
                                 int suf = 2;
                                 while (seenNames.Contains(finalName + " (" + suf + ")")) suf++;
                                 finalName = finalName + " (" + suf + ")";
-                                n.RawBlock = Regex.Replace(n.RawBlock, @"name:\s*[""']?[^""'\r\n,}]+[""']?", "name: " + YamlQuoteName(finalName));
+                                n.RawBlock = Regex.Replace(n.RawBlock, @"(?<![a-zA-Z0-9_-])name:\s*[""']?[^""'\r\n,}]+[""']?", "name: " + YamlQuoteName(finalName));
                                 n.Name = finalName;
                             }
                             seenNames.Add(finalName);
@@ -5640,16 +6256,16 @@ namespace Herciniamihomo
 
                     foreach (var n in allNodes)
                     {
-                        string name = n.Name;
+                        string name = FixMojibake(n.Name);
                         allNames.Add(name);
                         string lower = name.ToLowerInvariant();
-                        if (name.Contains("🇭🇰") || lower.Contains("hk") || lower.Contains("hong kong") || name.Contains("香港")) hkNames.Add(name);
-                        else if (name.Contains("🇺🇸") || lower.Contains("us") || lower.Contains("united states") || lower.Contains("america") || name.Contains("美国")) usNames.Add(name);
-                        else if (name.Contains("🇯🇵") || lower.Contains("jp") || lower.Contains("japan") || name.Contains("日本") || name.Contains("东京") || name.Contains("大阪")) jpNames.Add(name);
-                        else if (name.Contains("🇸🇬") || lower.Contains("sg") || lower.Contains("singapore") || name.Contains("狮城") || name.Contains("新加坡")) sgNames.Add(name);
-                        else if (name.Contains("🇹🇼") || lower.Contains("tw") || lower.Contains("taiwan") || name.Contains("台湾") || name.Contains("台北")) twNames.Add(name);
-                        else if (name.Contains("🇰🇷") || lower.Contains("kr") || lower.Contains("korea") || name.Contains("韩国") || name.Contains("首尔")) krNames.Add(name);
-                        else if (name.Contains("🇬🇧") || name.Contains("🇩🇪") || name.Contains("🇳🇱") || name.Contains("🇫🇷") || lower.Contains("uk") || lower.Contains("de") || lower.Contains("germany") || lower.Contains("europe") || name.Contains("欧洲") || name.Contains("德国") || name.Contains("英国") || name.Contains("荷兰")) euNames.Add(name);
+                        if (name.Contains("🇭🇰") || lower.Contains("hk") || lower.Contains("hong kong") || lower.Contains("hkg") || name.Contains("香港")) hkNames.Add(name);
+                        else if (name.Contains("🇺🇸") || lower.Contains("us") || lower.Contains("usa") || lower.Contains("united states") || lower.Contains("america") || name.Contains("美国") || name.Contains("洛杉矶") || name.Contains("圣何塞")) usNames.Add(name);
+                        else if (name.Contains("🇯🇵") || lower.Contains("jp") || lower.Contains("japan") || lower.Contains("jpn") || name.Contains("日本") || name.Contains("东京") || name.Contains("大阪")) jpNames.Add(name);
+                        else if (name.Contains("🇸🇬") || lower.Contains("sg") || lower.Contains("sgp") || lower.Contains("singapore") || name.Contains("狮城") || name.Contains("新加坡")) sgNames.Add(name);
+                        else if (name.Contains("🇹🇼") || lower.Contains("tw") || lower.Contains("twn") || lower.Contains("taiwan") || name.Contains("台湾") || name.Contains("台北")) twNames.Add(name);
+                        else if (name.Contains("🇰🇷") || lower.Contains("kr") || lower.Contains("kor") || lower.Contains("korea") || name.Contains("韩国") || name.Contains("首尔")) krNames.Add(name);
+                        else if (name.Contains("🇬🇧") || name.Contains("🇩🇪") || name.Contains("🇳🇱") || name.Contains("🇫🇷") || lower.Contains("uk") || lower.Contains("de") || lower.Contains("germany") || lower.Contains("europe") || name.Contains("欧洲") || name.Contains("德国") || name.Contains("英国") || name.Contains("荷兰") || name.Contains("法国")) euNames.Add(name);
                         else otherNames.Add(name);
                     }
 
